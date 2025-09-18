@@ -4,6 +4,13 @@ import { moviesByGenre, setOfGenres } from '@/controllers/genre';
 import { moviesByYear, setOfYears } from '@/controllers/year';
 import { searchedMoviesOrSeries } from '@/controllers/search';
 import { moviesByCountry, setOfCountries } from '@/controllers/country';
+import { CacheService } from '@/utils/cache';
+import {
+    clearAllCache,
+    clearCacheByPattern,
+    getCacheStats,
+    clearSpecificCache
+} from '@/controllers/cache';
 
 import {
     latestMovies,
@@ -25,33 +32,613 @@ import { downloadMovie, downloadSeries } from '@/controllers/download';
 
 const router: IRouter = Router();
 
-router.get('/movies', latestMovies);
-router.get('/popular/movies', popularMovies);
-router.get('/recent-release/movies', recentReleaseMovies);
-router.get('/top-rated/movies', topRatedMovies);
-router.get('/movies/:id', movieDetails);
+// Apply caching middleware to all routes
+const cache = CacheService.middleware();
 
-router.get('/movies/:id/streams', streamMovie);
-router.get('/movies/:id/download', downloadMovie);
+/**
+ * @swagger
+ * /movies:
+ *   get:
+ *     summary: Get latest movies
+ *     description: Retrieve the most recent movies from LK21
+ *     tags: [Movies]
+ *     parameters:
+ *       - $ref: '#/components/parameters/PageQuery'
+ *     responses:
+ *       200:
+ *         description: List of latest movies
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Movie'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+// Movie routes with caching
+router.get('/movies', cache, latestMovies);
 
-router.get('/genres', setOfGenres);
-router.get('/genres/:genre', moviesByGenre);
+/**
+ * @swagger
+ * /popular/movies:
+ *   get:
+ *     summary: Get popular movies
+ *     description: Retrieve the most popular movies from LK21
+ *     tags: [Movies]
+ *     parameters:
+ *       - $ref: '#/components/parameters/PageQuery'
+ *     responses:
+ *       200:
+ *         description: List of popular movies
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Movie'
+ */
+router.get('/popular/movies', cache, popularMovies);
 
-router.get('/countries', setOfCountries);
-router.get('/countries/:country', moviesByCountry);
+/**
+ * @swagger
+ * /recent-release/movies:
+ *   get:
+ *     summary: Get recent release movies
+ *     description: Retrieve recently released movies from LK21
+ *     tags: [Movies]
+ *     parameters:
+ *       - $ref: '#/components/parameters/PageQuery'
+ *     responses:
+ *       200:
+ *         description: List of recent release movies
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Movie'
+ */
+router.get('/recent-release/movies', cache, recentReleaseMovies);
 
-router.get('/years', setOfYears);
-router.get('/years/:year', moviesByYear);
+/**
+ * @swagger
+ * /top-rated/movies:
+ *   get:
+ *     summary: Get top-rated movies
+ *     description: Retrieve the highest-rated movies from LK21
+ *     tags: [Movies]
+ *     parameters:
+ *       - $ref: '#/components/parameters/PageQuery'
+ *     responses:
+ *       200:
+ *         description: List of top-rated movies
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Movie'
+ */
+router.get('/top-rated/movies', cache, topRatedMovies);
 
-router.get('/series', latestSeries);
-router.get('/popular/series', popularSeries);
-router.get('/recent-release/series', recentReleaseSeries);
-router.get('/top-rated/series', topRatedSeries);
-router.get('/series/:id', seriesDetails);
+/**
+ * @swagger
+ * /movies/{id}:
+ *   get:
+ *     summary: Get movie details
+ *     description: Retrieve detailed information about a specific movie
+ *     tags: [Movies]
+ *     parameters:
+ *       - $ref: '#/components/parameters/MovieId'
+ *     responses:
+ *       200:
+ *         description: Movie details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/MovieDetails'
+ *       404:
+ *         description: Movie not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/movies/:id', cache, movieDetails);
 
-router.get('/series/:id/streams', streamSeries);
-router.get('/series/:id/downloads', downloadSeries);
+/**
+ * @swagger
+ * /movies/{id}/streams:
+ *   get:
+ *     summary: Get movie streaming sources
+ *     description: Retrieve streaming URLs for a specific movie (requires Playwright processing)
+ *     tags: [Streaming]
+ *     parameters:
+ *       - $ref: '#/components/parameters/MovieId'
+ *     responses:
+ *       200:
+ *         description: Movie streaming sources
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 streaming_url:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       provider:
+ *                         type: string
+ *                         example: "Player 1"
+ *                       url:
+ *                         type: string
+ *                         format: uri
+ *                         example: "https://example.com/stream"
+ */
+// Heavy operations with caching (Playwright routes)
+router.get('/movies/:id/streams', cache, streamMovie);
 
-router.get('/search/:title', searchedMoviesOrSeries);
+/**
+ * @swagger
+ * /movies/{id}/download:
+ *   get:
+ *     summary: Get movie download links
+ *     description: Retrieve download URLs for a specific movie
+ *     tags: [Streaming]
+ *     parameters:
+ *       - $ref: '#/components/parameters/MovieId'
+ *     responses:
+ *       200:
+ *         description: Movie download links
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 download_url:
+ *                   type: string
+ *                   format: uri
+ *                   example: "https://dl.lk21.party/get/movie-id"
+ */
+router.get('/movies/:id/download', cache, downloadMovie);
+
+/**
+ * @swagger
+ * /genres:
+ *   get:
+ *     summary: Get all genres
+ *     description: Retrieve all available movie/series genres
+ *     tags: [Categories]
+ *     responses:
+ *       200:
+ *         description: List of all genres
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Genre'
+ */
+// Genre, country, year routes with caching
+router.get('/genres', cache, setOfGenres);
+
+/**
+ * @swagger
+ * /genres/{genre}:
+ *   get:
+ *     summary: Get movies by genre
+ *     description: Retrieve movies from a specific genre
+ *     tags: [Categories]
+ *     parameters:
+ *       - in: path
+ *         name: genre
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Genre name (e.g., action, comedy, horror)
+ *         example: action
+ *       - $ref: '#/components/parameters/PageQuery'
+ *     responses:
+ *       200:
+ *         description: List of movies in the specified genre
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Movie'
+ */
+router.get('/genres/:genre', cache, moviesByGenre);
+
+/**
+ * @swagger
+ * /countries:
+ *   get:
+ *     summary: Get all countries
+ *     description: Retrieve all available movie/series countries
+ *     tags: [Categories]
+ *     responses:
+ *       200:
+ *         description: List of all countries
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Country'
+ */
+router.get('/countries', cache, setOfCountries);
+
+/**
+ * @swagger
+ * /countries/{country}:
+ *   get:
+ *     summary: Get movies by country
+ *     description: Retrieve movies from a specific country
+ *     tags: [Categories]
+ *     parameters:
+ *       - in: path
+ *         name: country
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Country name (e.g., usa, korea, japan)
+ *         example: usa
+ *       - $ref: '#/components/parameters/PageQuery'
+ *     responses:
+ *       200:
+ *         description: List of movies from the specified country
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Movie'
+ */
+router.get('/countries/:country', cache, moviesByCountry);
+
+/**
+ * @swagger
+ * /years:
+ *   get:
+ *     summary: Get all years
+ *     description: Retrieve all available movie/series release years
+ *     tags: [Categories]
+ *     responses:
+ *       200:
+ *         description: List of all years
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Year'
+ */
+router.get('/years', cache, setOfYears);
+
+/**
+ * @swagger
+ * /years/{year}:
+ *   get:
+ *     summary: Get movies by year
+ *     description: Retrieve movies from a specific release year
+ *     tags: [Categories]
+ *     parameters:
+ *       - in: path
+ *         name: year
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Release year (e.g., 2023, 2022, 2021)
+ *         example: "2023"
+ *       - $ref: '#/components/parameters/PageQuery'
+ *     responses:
+ *       200:
+ *         description: List of movies from the specified year
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Movie'
+ */
+router.get('/years/:year', cache, moviesByYear);
+
+/**
+ * @swagger
+ * /series:
+ *   get:
+ *     summary: Get latest series
+ *     description: Retrieve the most recent TV series from LK21
+ *     tags: [Series]
+ *     parameters:
+ *       - $ref: '#/components/parameters/PageQuery'
+ *     responses:
+ *       200:
+ *         description: List of latest series
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Series'
+ */
+// Series routes with caching
+router.get('/series', cache, latestSeries);
+
+/**
+ * @swagger
+ * /popular/series:
+ *   get:
+ *     summary: Get popular series
+ *     description: Retrieve the most popular TV series from LK21
+ *     tags: [Series]
+ *     parameters:
+ *       - $ref: '#/components/parameters/PageQuery'
+ *     responses:
+ *       200:
+ *         description: List of popular series
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Series'
+ */
+router.get('/popular/series', cache, popularSeries);
+
+/**
+ * @swagger
+ * /recent-release/series:
+ *   get:
+ *     summary: Get recent release series
+ *     description: Retrieve recently released TV series from LK21
+ *     tags: [Series]
+ *     parameters:
+ *       - $ref: '#/components/parameters/PageQuery'
+ *     responses:
+ *       200:
+ *         description: List of recent release series
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Series'
+ */
+router.get('/recent-release/series', cache, recentReleaseSeries);
+
+/**
+ * @swagger
+ * /top-rated/series:
+ *   get:
+ *     summary: Get top-rated series
+ *     description: Retrieve the highest-rated TV series from LK21
+ *     tags: [Series]
+ *     parameters:
+ *       - $ref: '#/components/parameters/PageQuery'
+ *     responses:
+ *       200:
+ *         description: List of top-rated series
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Series'
+ */
+router.get('/top-rated/series', cache, topRatedSeries);
+
+/**
+ * @swagger
+ * /series/{id}:
+ *   get:
+ *     summary: Get series details
+ *     description: Retrieve detailed information about a specific TV series including seasons and episodes
+ *     tags: [Series]
+ *     parameters:
+ *       - $ref: '#/components/parameters/SeriesId'
+ *     responses:
+ *       200:
+ *         description: Series details with seasons and episodes
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SeriesDetails'
+ *       404:
+ *         description: Series not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/series/:id', cache, seriesDetails);
+
+/**
+ * @swagger
+ * /episodes/{id}:
+ *   get:
+ *     summary: Get episode streaming sources
+ *     description: Retrieve streaming URLs and details for a specific episode (requires Playwright processing)
+ *     tags: [Streaming]
+ *     parameters:
+ *       - $ref: '#/components/parameters/EpisodeId'
+ *     responses:
+ *       200:
+ *         description: Episode streaming sources and details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                   example: "wednesday-2022-episode-1"
+ *                 title:
+ *                   type: string
+ *                   example: "Wednesday's Child Is Full of Woe"
+ *                 type:
+ *                   type: string
+ *                   example: "episode"
+ *                 streaming_url:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       provider:
+ *                         type: string
+ *                         example: "Player 1"
+ *                       url:
+ *                         type: string
+ *                         format: uri
+ *                         example: "https://example.com/stream"
+ */
+// Heavy Playwright operation
+router.get('/episodes/:id', cache, streamSeries);
+
+/**
+ * @swagger
+ * /search/{title}:
+ *   get:
+ *     summary: Search movies and series
+ *     description: Search for movies and TV series by title
+ *     tags: [Search]
+ *     parameters:
+ *       - in: path
+ *         name: title
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Search query (movie or series title)
+ *         example: "avatar"
+ *     responses:
+ *       200:
+ *         description: Search results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 oneOf:
+ *                   - $ref: '#/components/schemas/Movie'
+ *                   - $ref: '#/components/schemas/Series'
+ */
+// Search with caching
+router.get('/search/:title', cache, searchedMoviesOrSeries);
+
+/**
+ * @swagger
+ * /cache/clear:
+ *   delete:
+ *     summary: Clear all cache
+ *     description: Delete all cached data from Redis
+ *     tags: [Cache Management]
+ *     responses:
+ *       200:
+ *         description: Cache cleared successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       500:
+ *         description: Failed to clear cache
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+// Cache management endpoints (no caching for these)
+router.delete('/cache/clear', clearAllCache);
+
+/**
+ * @swagger
+ * /cache/clear/{pattern}:
+ *   delete:
+ *     summary: Clear cache by pattern
+ *     description: Delete cached data matching a specific pattern
+ *     tags: [Cache Management]
+ *     parameters:
+ *       - in: path
+ *         name: pattern
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Cache pattern to match (e.g., movies*, series*, search*)
+ *         example: "movies*"
+ *     responses:
+ *       200:
+ *         description: Cache cleared successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       400:
+ *         description: Invalid pattern
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.delete('/cache/clear/:pattern', clearCacheByPattern);
+
+/**
+ * @swagger
+ * /cache/key/{key}:
+ *   delete:
+ *     summary: Clear specific cache key
+ *     description: Delete a specific cache entry by key
+ *     tags: [Cache Management]
+ *     parameters:
+ *       - in: path
+ *         name: key
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Specific cache key to delete
+ *         example: "/movies"
+ *     responses:
+ *       200:
+ *         description: Cache key cleared successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       400:
+ *         description: Invalid key
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.delete('/cache/key/:key', clearSpecificCache);
+
+/**
+ * @swagger
+ * /cache/stats:
+ *   get:
+ *     summary: Get cache statistics
+ *     description: Retrieve information about current cache usage
+ *     tags: [Cache Management]
+ *     responses:
+ *       200:
+ *         description: Cache statistics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CacheStats'
+ *       500:
+ *         description: Failed to get cache stats
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/cache/stats', getCacheStats);
 
 export default router;

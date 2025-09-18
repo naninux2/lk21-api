@@ -9,6 +9,8 @@ Unofficial LK21 (LayarKaca21) and NontonDrama APIs for streaming movies, animati
 -   [Getting Started](#getting-started)
     -   [Installation](#installation)
     -   [Environment Variables](#environment-variables)
+    -   [Redis Caching](#redis-caching)
+-   [API Documentation](#api-documentation)
 -   [Reference](#reference)
     -   [List of Endpoints](#list-of-endpoints)
     -   [Pagination](#pagination)
@@ -41,7 +43,17 @@ npm install
 npm run prepare && npm run build
 ```
 
-**Step 5:** Run the project.
+**Step 5:** *(Optional)* Set up Redis for caching.
+
+```bash
+# Install and start Redis server
+redis-server
+
+# Or using Docker
+docker run -d -p 6379:6379 redis:alpine
+```
+
+**Step 6:** Run the project.
 
 ```bash
 npm start
@@ -57,7 +69,65 @@ LK21_URL = https://tv.lk21official.live
 
 # NontonDrama URL
 ND_URL = https://tv.nontondrama.lol
+
+# Redis configuration (optional)
+REDIS_URL = redis://localhost:6379
+CACHE_TTL = 30
 ```
+
+### Redis Caching
+
+This API includes Redis caching to improve performance and reduce load on scraped websites. Caching is especially beneficial for:
+
+- **Heavy Playwright operations** (series details, episode streaming)
+- **Movie listings and search results**
+- **Genre, country, and year data**
+
+**Benefits:**
+- 🚀 **Faster response times** - Cached responses served instantly
+- 🔄 **Reduced scraping load** - Less requests to target websites  
+- 🎭 **Browser overhead reduction** - Playwright operations cached
+- 📊 **Configurable TTL** - Set cache duration via `CACHE_TTL` (default: 30 seconds)
+
+**Setup:**
+1. Install Redis: `brew install redis` (macOS) or [download for Windows](https://github.com/tporadowski/redis/releases)
+2. Start Redis: `redis-server`
+3. The API will automatically use caching when Redis is available
+
+**Note:** The API works perfectly fine without Redis - it just won't have caching benefits.
+
+## API Documentation
+
+LK21 API provides comprehensive **interactive documentation** powered by Swagger UI.
+
+### 📖 Access Documentation
+
+**Swagger UI (Interactive)**: `http://localhost:8080/docs`
+- Interactive API testing interface
+- Try endpoints directly from browser  
+- Detailed request/response schemas
+- Real-time API responses
+
+**OpenAPI JSON**: `http://localhost:8080/docs.json`
+- Raw OpenAPI 3.0 specification
+- Import to Postman, Insomnia, or other tools
+
+### 🎯 Features
+
+- **Categorized endpoints** (Movies, Series, Search, Cache Management)
+- **Interactive testing** with "Try it out" buttons
+- **Comprehensive schemas** with examples
+- **Real-time response** monitoring
+- **Mobile-friendly** interface
+- **Parameter validation** and error handling
+
+### 📱 Quick Start
+1. Start the server: `npm start`
+2. Open documentation: `http://localhost:8080/docs`
+3. Click **"Try it out"** on any endpoint
+4. Test the API directly in your browser!
+
+See detailed documentation guide: [API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md)
 
 ## Reference
 

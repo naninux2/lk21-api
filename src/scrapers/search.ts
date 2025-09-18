@@ -20,56 +20,54 @@ export const scrapeSearchedMoviesOrSeries = async (
         protocol,
     } = req;
 
-    $('div.search-wrapper > div.search-item').each((i, el) => {
-        const content: cheerio.Cheerio = $(el).find('div.search-content');
-        const obj = {} as ISearchedMoviesOrSeries;
-        const genres: string[] = [];
+    $('#results')
+        .find('article')
+        .each((i, el) => {
+            console.log(el);
+            const genres: { name: string, url: string }[] = [];
+            const findGenres = $(el)
+                .find('meta[itemprop="genre"]')
+                .attr('content');
 
-        let type: 'movie' | 'series' = 'movie';
+            if (findGenres) {
+                findGenres.split(',').forEach((genre) => {
+                    const genreUrl = genre.toLowerCase().replace(/\s+/g, '-');
+                    genres.push(
+                        { name: genre.trim(), url: `${protocol}://${host}/genres/${genreUrl}` }
+                    );
+                });
+            }
 
-        $(el)
-            .find('p.cat-links > a')
-            .each((i, el2) => {
-                const x: string[] = $(el2).attr('href')?.split('/') || [];
+            const movieId: string =
+                $(el)
+                    .find('a')
+                    .attr('href')
+                    ?.split('/')
+                    .reverse()[0] ?? '';
 
-                if (x[1] === 'genre') genres.push(x[2]);
-                if (x[1] === 'series') type = 'series';
-            });
+            const obj = {} as ISearchedMoviesOrSeries;
 
-        const movieId =
-            $(content).find('h2 > a').attr('href')?.split('/').reverse()[1] ||
-            '';
+            let type = 'movie';
+            // get alt from img. check if contains Series then type is series
+            const altText = $(el).find('figure img').attr('alt') || '';
+            if (altText.toLowerCase().includes('series')) {
+                type = 'series';
+            }
 
-        obj['_id'] = movieId;
-        obj['title'] = $(content).find('h2 > a').text();
-        obj['type'] = type;
-        obj['posterImg'] = `https://${$(el)
-            .find('figure > a > img')
-            .attr('src')}`;
-        obj['url'] = `${protocol}://${host}/${type}/${movieId}`;
-        obj['genres'] = genres;
+            obj['_id'] = movieId;
+            obj['title'] =
+                $(el).find('.poster-title').text() ?? '';
+            obj['type'] = type;
+            obj['posterImg'] = `${$(el)
+                .find('figure img')
+                .attr('src')}`;
+            obj['rating'] = $(el).find('span[itemprop="ratingValue"]').text();
+            obj['url'] = `${protocol}://${host}/${type}/${movieId}`;
+            obj['year'] = $(el).find('span.year').text().trim();
 
-        /* eslint-disable */
-        $(content)
-            .find('p')
-            .each((i, el2) => {
-                switch ($(el2).find('strong').text().toLowerCase()) {
-                    case 'sutradara:':
-                        $(el2).find('strong').remove();
-                        obj['directors'] = $(el2).text().trim().split(', ');
-                        break;
-                    case 'bintang:':
-                        $(el2).find('strong').remove();
-                        obj['casts'] = $(el2).text().trim().split(', ');
-                        break;
-                    default:
-                        break;
-                }
-            });
-        /* eslint-enable */
+            payload.push(obj);
+        });
 
-        payload.push(obj);
-    });
 
     return payload;
 };

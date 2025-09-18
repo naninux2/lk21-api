@@ -20,46 +20,50 @@ export const scrapeMovies = async (
         headers: { host },
     } = req;
 
-    $('main > div.container > section.archive')
-        .find('div.grid-archive > div#grid-wrapper > div.infscroll-item')
+    $('main > div.main-section > div.container > div.widget')
+        .find('div.gallery-grid > article')
         .each((i, el) => {
-            const parent: cheerio.Cheerio = $(el).find('article.mega-item');
-            const genres: string[] = [];
+            const genres: { name: string, url: string }[] = [];
+            const findGenres = $(el)
+                .find('meta[itemprop="genre"]')
+                .attr('content');
 
-            $(parent)
-                .find('footer')
-                .find('div.grid-categories > a')
-                .each((i, el2) => {
-                    const x: string[] = $(el2).attr('href')?.split('/') ?? [];
-
-                    if (x.length > 0 && x[1] === 'genre') {
-                        genres.push(x[2]);
-                    }
+            if (findGenres) {
+                findGenres.split(',').forEach((genre) => {
+                    const genreUrl = genre.toLowerCase().replace(/\s+/g, '-');
+                    genres.push(
+                        { name: genre.trim(), url: `${protocol}://${host}/genres/${genreUrl}` }
+                    );
                 });
+            }
+
 
             const movieId: string =
-                $(parent)
-                    .find('figure > a')
+                $(el)
+                    .find('a')
                     .attr('href')
                     ?.split('/')
-                    .reverse()[1] ?? '';
+                    .reverse()[0] ?? '';
 
             const obj = {} as IMovies;
 
             obj['_id'] = movieId;
             obj['title'] =
-                $(parent).find('figure > a > picture > img').attr('alt') ?? '';
+                $(el).find('.poster-title').text() ?? '';
             obj['type'] = 'movie';
-            obj['posterImg'] = `https:${$(parent)
-                .find('figure > a > picture > img')
+            obj['posterImg'] = `${$(el)
+                .find('picture > img')
                 .attr('src')}`;
-            obj['rating'] = $(parent).find('figure').find('div.rating').text();
+            obj['rating'] = $(el).find('span[itemprop="ratingValue"]').text();
             obj['url'] = `${protocol}://${host}/movies/${movieId}`;
-            obj['qualityResolution'] = $(parent)
-                .find('figure')
-                .find('div.quality')
+            obj['qualityResolution'] = $(el)
+                .find('.label.label-HD')
                 .text();
             obj['genres'] = genres;
+            obj['duration'] = $(el)
+                .find('span[itemprop="duration"]')
+                .text();
+            obj['year'] = $(el).find('span.year').text().trim();
 
             payload.push(obj);
         });
@@ -82,63 +86,59 @@ export const scrapeMovieDetails = async (
     const $: cheerio.Root = cheerio.load(res.data);
     const obj = {} as IMovieDetails;
 
-    const genres: string[] = [];
-    const directors: string[] = [];
-    const countries: string[] = [];
-    const casts: string[] = [];
+    const genres: { name: string, url: string }[] = [];
+    const directors: { name: string, url: string }[] = [];
+    const countries: { name: string, url: string }[] = [];
+    const casts: { name: string, url: string }[] = [];
+    const streaming_url: { provider: string; url: string }[] = [];
 
     $('div.content').find('blockquote').find('strong').remove();
 
     obj['_id'] = originalUrl.split('/').reverse()[0];
     obj['title'] =
-        $('div.content-poster').find('figure > picture > img').attr('alt') ??
+        $('.movie-info').find('h1').text().replace("Nonton ", "").replace(" Sub Indo di Lk21", "") ??
         '';
     obj['type'] = 'movie';
-    obj['posterImg'] = `https:${$('div.content-poster')
-        .find('figure > picture > img')
-        .attr('src')}`;
+    obj['posterImg'] = `${$('meta[property="og:image"]').attr('content')}`;
 
-    $('div.content > div').each((i, el) => {
-        /* eslint-disable */
-        switch ($(el).find('h2').text().toLowerCase()) {
-            case 'durasi':
-                obj['duration'] = $(el).find('h3').text().trim();
-                break;
-            case 'imdb':
-                obj['rating'] = $(el).find('h3:nth-child(2)').text().trim();
-                break;
-            case 'diterbitkan':
-                obj['releaseDate'] = $(el).find('h3').text().trim();
-                break;
-            case 'kualitas':
-                obj['quality'] = $(el).find('h3 > a').text().trim();
+    $('.tag-list').find(".tag").each((i, el) => {
+        const href = $(el).find('a').attr('href');
+        if (href?.includes('/genre/')) {
+            const genreUrl = href.split('/').reverse()[0];
+            genres.push({ name: $(el).text().trim(), url: `/genres/${genreUrl}` });
+        }
+
+        if (href?.includes('/country/')) {
+            const countryUrl = href.split('/').reverse()[0];
+            countries.push({ name: $(el).text().trim(), url: `/countries/${countryUrl}` });
+        }
+    });
+
+    $('.detail').find("p").each((i, el) => {
+        const spanText = $(el).find('span').text().toLowerCase().replace(":", "").trim();
+        switch (spanText) {
+            case 'release':
+                obj['releaseDate'] = $(el).text().trim().replace('Release:', '').trim();
                 break;
             case 'sutradara':
                 $(el)
-                    .find('h3 > a')
-                    .each((i, el) => {
-                        directors.push($(el).text().trim());
-                    });
-                break;
-            case 'negara':
-                $(el)
-                    .find('h3 > a')
-                    .each((i, el) => {
-                        countries.push($(el).text());
-                    });
-                break;
-            case 'genre':
-                $(el)
-                    .find('h3 > a')
-                    .each((i, el) => {
-                        genres.push($(el).text());
+                    .find('a')
+                    .each((i, directorEl) => {
+                        const directorUrl = $(directorEl).attr('href')?.split('/').reverse()[0];
+                        if (directorUrl) {
+                            directors.push({ name: $(directorEl).text().trim(), url: `/directors/${directorUrl}` });
+                        }
                     });
                 break;
             case 'bintang film':
+                console.log("masuk bintang film");
                 $(el)
-                    .find('h3')
-                    .each((i, el) => {
-                        casts.push($(el).find('a').text());
+                    .find('a')
+                    .each((i, castEl) => {
+                        const castUrl = $(castEl).attr('href')?.split('/').reverse()[0];
+                        if (castUrl) {
+                            casts.push({ name: $(castEl).text().trim(), url: `/actors/${castUrl}` });
+                        }
                     });
                 break;
             default:
@@ -147,13 +147,23 @@ export const scrapeMovieDetails = async (
         /* eslint-enable */
     });
 
-    obj['synopsis'] = $('div.content').find('blockquote').text();
+    $("#player-list").find('li').each((i, el) => {
+        const provider = $(el).text().trim();
+        const url = $(el).find('a').attr('data-url');
+        if (url) {
+            streaming_url.push({ provider, url });
+        }
+    });
+
+    obj['synopsis'] = $('.synopsis.collapsed').text().trim();
     obj['trailerUrl'] =
-        $('div.action-player').find('a.fancybox').attr('href') ?? '';
+        $('a.yt-lightbox').attr('href') ?? '';
     obj['genres'] = genres;
     obj['directors'] = directors;
     obj['countries'] = countries;
     obj['casts'] = casts;
-
+    obj['streaming_url'] = streaming_url;
+    obj['rating'] = $('div.info-tag').find('span > strong').text().trim();
+    obj['download_url'] = `https://dl.lk21.party/get/${obj['_id']}`;
     return obj;
 };

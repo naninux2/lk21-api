@@ -21,24 +21,17 @@ export const scrapeSetOfGenres = async (
         protocol,
     } = req;
 
-    $('form.form-filter')
-        .find('div:nth-child(5) > select.form-control > option')
+    $('select[name="rgenre1"]')
+        .find('option')
         .each((i, el) => {
-            const target = $(el).text().split(' ');
-            const obj = {} as ISetOfGenres;
-
-            genres.map((genre) => {
-                if (genre === target[0].toLowerCase()) {
-                    obj['parameter'] = genre;
-                    obj['name'] = target[0];
-                    obj['numberOfContents'] = Number(
-                        target[1].substring(1, target[1].length - 1)
-                    );
-                    obj['url'] = `${protocol}://${host}/genres/${genre}`;
-
-                    payload.push(obj);
-                }
-            });
+            const genreName = $(el).text().trim();
+            const genreValue = $(el).attr('value')?.trim() ?? '';
+            if (genreValue && genreName && genreValue !== 'all') {
+                payload.push({
+                    name: genreName,
+                    url: `${protocol}://${host}/genres/${genreValue}`,
+                });
+            }
         });
 
     return payload;

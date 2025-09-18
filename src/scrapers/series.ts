@@ -2,6 +2,7 @@ import cheerio from 'cheerio';
 import { AxiosResponse } from 'axios';
 import { Request } from 'express';
 import { ISeasonsList, ISeries, ISeriesDetails } from '@/types';
+import playwright from 'playwright';
 
 /**
  * Scrape series asynchronously
@@ -20,47 +21,50 @@ export const scrapeSeries = async (
         protocol,
     } = req;
 
-    $('main > div.container > section.archive')
-        .find('div.grid-archive > div#grid-wrapper > div.infscroll-item')
+    $('main > div.main-section > div.container > div.widget')
+        .find('div.gallery-grid > article')
         .each((i, el) => {
-            const parent: cheerio.Cheerio = $(el).find('article.mega-item');
-            const genres: string[] = [];
+            const genres: { name: string, url: string }[] = [];
+            const findGenres = $(el)
+                .find('meta[itemprop="genre"]')
+                .attr('content');
 
-            $(parent)
-                .find('footer')
-                .find('div.grid-categories > a')
-                .each((i, el2) => {
-                    const x: string[] = $(el2).attr('href')?.split('/') ?? [];
-
-                    if (x.length > 0 && x[1] === 'genre') {
-                        genres.push(x[2]);
-                    }
+            if (findGenres) {
+                findGenres.split(',').forEach((genre) => {
+                    const genreUrl = genre.toLowerCase().replace(/\s+/g, '-');
+                    genres.push(
+                        { name: genre.trim(), url: `${protocol}://${host}/genres/${genreUrl}` }
+                    );
                 });
+            }
 
-            const seriesId: string =
-                $(parent)
-                    .find('figure > a')
+
+            const movieId: string =
+                $(el)
+                    .find('a')
                     .attr('href')
                     ?.split('/')
-                    .reverse()[1] ?? '';
+                    .reverse()[0] ?? '';
 
             const obj = {} as ISeries;
 
-            obj['_id'] = seriesId;
+            obj['_id'] = movieId;
             obj['title'] =
-                $(parent).find('figure > a > picture > img').attr('alt') ?? '';
+                $(el).find('.poster-title').text() ?? '';
             obj['type'] = 'series';
-            obj['posterImg'] = `https:${$(parent)
-                .find('figure > a > picture > img')
+            obj['posterImg'] = `${$(el)
+                .find('picture > img')
                 .attr('src')}`;
-            obj['episode'] = Number(
-                $(parent)
-                    .find('figure > div.grid-meta > div.last-episode > span')
-                    .text()
-            );
-            obj['rating'] = $(parent).find('figure').find('div.rating').text();
-            obj['url'] = `${protocol}://${host}/series/${seriesId}`;
+            obj['rating'] = $(el).find('span[itemprop="ratingValue"]').text();
+            obj['url'] = `${protocol}://${host}/movies/${movieId}`;
+            obj['qualityResolution'] = $(el)
+                .find('.label.label-HD')
+                .text();
             obj['genres'] = genres;
+            obj['duration'] = $(el)
+                .find('span[itemprop="duration"]')
+                .text();
+            obj['year'] = $(el).find('span.year').text().trim();
 
             payload.push(obj);
         });
@@ -83,67 +87,59 @@ export const scrapeSeriesDetails = async (
     const $: cheerio.Root = cheerio.load(res.data);
     const obj = {} as ISeriesDetails;
 
-    const genres: string[] = [];
-    const directors: string[] = [];
-    const countries: string[] = [];
-    const casts: string[] = [];
+    const genres: { name: string, url: string }[] = [];
+    const directors: { name: string, url: string }[] = [];
+    const countries: { name: string, url: string }[] = [];
+    const casts: { name: string, url: string }[] = [];
+    const streaming_url: { provider: string; url: string }[] = [];
 
     $('div.content').find('blockquote').find('strong').remove();
 
     obj['_id'] = originalUrl.split('/').reverse()[0];
     obj['title'] =
-        $('div.content-poster').find('figure > picture > img').attr('alt') ??
+        $('.movie-info').find('h1').text().replace("Nonton ", "").replace(" Sub Indo di Lk21", "") ??
         '';
-    obj['type'] = 'series';
-    obj['posterImg'] = `https:${$('div.content-poster')
-        .find('figure > picture > img')
-        .attr('src')}`;
+    obj['type'] = 'movie';
+    obj['posterImg'] = `${$('meta[property="og:image"]').attr('content')}`;
 
-    $('div.content > div').each((i, el) => {
-        /* eslint-disable */
-        switch ($(el).find('h2').text().toLowerCase()) {
-            case 'durasi':
-                obj['duration'] = $(el).find('h3').text().trim();
-                break;
-            case 'imdb':
-                obj['rating'] = $(el).find('h3:nth-child(2)').text().trim();
-                break;
-            case 'diterbitkan':
-                obj['releaseDate'] = $(el).find('h3').text().trim();
-                break;
-            case 'status':
-                obj['status'] = $(el)
-                    .find('h3 > span')
-                    .text()
-                    .toLowerCase()
-                    .trim();
+    $('.tag-list').find(".tag").each((i, el) => {
+        const href = $(el).find('a').attr('href');
+        if (href?.includes('/genre/')) {
+            const genreUrl = href.split('/').reverse()[0];
+            genres.push({ name: $(el).text().trim(), url: `/genres/${genreUrl}` });
+        }
+
+        if (href?.includes('/country/')) {
+            const countryUrl = href.split('/').reverse()[0];
+            countries.push({ name: $(el).text().trim(), url: `/countries/${countryUrl}` });
+        }
+    });
+
+    $('.detail').find("p").each((i, el) => {
+        const spanText = $(el).find('span').text().toLowerCase().replace(":", "").trim();
+        switch (spanText) {
+            case 'release':
+                obj['releaseDate'] = $(el).text().trim().replace('Release:', '').trim();
                 break;
             case 'sutradara':
                 $(el)
-                    .find('h3 > a')
-                    .each((i, el) => {
-                        directors.push($(el).text().trim());
-                    });
-                break;
-            case 'negara':
-                $(el)
-                    .find('h3 > a')
-                    .each((i, el) => {
-                        countries.push($(el).text());
-                    });
-                break;
-            case 'genre':
-                $(el)
-                    .find('h3 > a')
-                    .each((i, el) => {
-                        genres.push($(el).text());
+                    .find('a')
+                    .each((i, directorEl) => {
+                        const directorUrl = $(directorEl).attr('href')?.split('/').reverse()[0];
+                        if (directorUrl) {
+                            directors.push({ name: $(directorEl).text().trim(), url: `/directors/${directorUrl}` });
+                        }
                     });
                 break;
             case 'bintang film':
+                console.log("masuk bintang film");
                 $(el)
-                    .find('h3')
-                    .each((i, el) => {
-                        casts.push($(el).find('a').text());
+                    .find('a')
+                    .each((i, castEl) => {
+                        const castUrl = $(castEl).attr('href')?.split('/').reverse()[0];
+                        if (castUrl) {
+                            casts.push({ name: $(castEl).text().trim(), url: `/actors/${castUrl}` });
+                        }
                     });
                 break;
             default:
@@ -152,28 +148,77 @@ export const scrapeSeriesDetails = async (
         /* eslint-enable */
     });
 
-    obj['synopsis'] = $('div.content').find('blockquote').text();
-    obj['trailerUrl'] = `${$('div.player-content > iframe').attr('src')}`;
+    $("#player-list").find('li').each((i, el) => {
+        const provider = $(el).text().trim();
+        const url = $(el).find('a').attr('data-url');
+        if (url) {
+            streaming_url.push({ provider, url });
+        }
+    });
+
+    obj['synopsis'] = $('.synopsis.collapsed').text().trim();
+    obj['trailerUrl'] =
+        $('a.yt-lightbox').attr('href') ?? '';
     obj['genres'] = genres;
     obj['directors'] = directors;
     obj['countries'] = countries;
     obj['casts'] = casts;
+    obj['rating'] = $('div.info-tag').find('span > strong').text().trim();
 
-    const epsElem: cheerio.Cheerio = $('div.serial-wrapper > div.episode-list');
+    const browser = await playwright.chromium.launch();
+    const page = await browser.newPage();
+    const fullUrl = process.env.ND_URL + originalUrl.replace("/series/", "")
+    console.log("fullUrl", fullUrl);
+    await page.goto(fullUrl, { waitUntil: 'networkidle' });
+    const content = await page.content();
+    const $$ = cheerio.load(content);
+
+    // get all seasons from the dropdown
     const seasons: ISeasonsList[] = [];
+    const seasonOptions: { season: number; value: string }[] = [];
 
-    for (let i = epsElem.length; i >= 1; i--) {
-        const obj2 = {} as ISeasonsList;
+    // First, collect all season options
+    $$("select.season-select > option").each((i, el) => {
+        const season = parseInt($$(el).attr('value')?.trim() || "1");
+        const value = $$(el).attr('value')?.trim() || "1";
+        seasonOptions.push({ season, value });
+    });
 
-        obj2['season'] = i;
-        obj2['totalEpisodes'] = $(epsElem[epsElem.length - i]).find(
-            'a.btn-primary'
-        ).length;
-
-        seasons.push(obj2);
+    // Then, process each season sequentially
+    for (const option of seasonOptions) {
+        try {
+            await page.selectOption('select.season-select', option.value);
+            await page.waitForTimeout(1000); // wait for 1 second to load the episodes
+            const newContent = await page.content();
+            const $$$ = cheerio.load(newContent);
+            // const totalEpisodes = $$$('ul.episode-list > li').length || 1;
+            const episodes: { episode: number; title: string; url: string }[] = [];
+            $$$('ul.episode-list > li').each((i, el) => {
+                const episodeUrl = $$$(el).find('a').attr('href')?.split('/').reverse()[0];
+                const episodeTitle = $$$(el).find('a').attr('title')?.trim() || `Episode ${i + 1}`;
+                if (episodeUrl) {
+                    episodes.push({ episode: i + 1, title: episodeTitle, url: `/episodes/${episodeUrl}` });
+                }
+            });
+            seasons.push({
+                season: option.season,
+                // totalEpisodes,
+                episodes,
+            });
+        } catch (error) {
+            console.error(`Error processing season ${option.season}:`, error);
+            // Add season with default episode count if there's an error
+            seasons.push({
+                season: option.season,
+                episodes: [],
+            });
+        }
     }
 
     obj['seasons'] = seasons;
+
+    // stop browser
+    await browser.close();
 
     return obj;
 };

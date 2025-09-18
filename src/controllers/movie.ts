@@ -15,13 +15,12 @@ export const latestMovies: TController = async (req, res) => {
         const { page = 0 } = req.query;
 
         const axiosRequest = await axios.get(
-            `${process.env.LK21_URL}/latest${
-                Number(page) > 1 ? `/page/${page}` : ''
+            `${process.env.LK21_URL}/latest${Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
+        console.log(process.env.LK21_URL + `/latest${Number(page) > 1 ? `/page/${page}` : ''}`);
 
         const payload = await scrapeMovies(req, axiosRequest);
-
         res.status(200).json(payload);
     } catch (err) {
         console.error(err);
@@ -41,8 +40,7 @@ export const popularMovies: TController = async (req, res) => {
         const { page = 0 } = req.query;
 
         const axiosRequest = await axios.get(
-            `${process.env.LK21_URL}/populer${
-                Number(page) > 1 ? `/page/${page}` : ''
+            `${process.env.LK21_URL}/populer${Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
 
@@ -68,8 +66,7 @@ export const recentReleaseMovies: TController = async (req, res) => {
         const { page = 0 } = req.query;
 
         const axiosRequest = await axios.get(
-            `${process.env.LK21_URL}/release${
-                Number(page) > 1 ? `/page/${page}` : ''
+            `${process.env.LK21_URL}/release${Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
 
@@ -94,8 +91,7 @@ export const topRatedMovies: TController = async (req, res) => {
         const { page = 0 } = req.query;
 
         const axiosRequest = await axios.get(
-            `${process.env.LK21_URL}/rating${
-                Number(page) > 1 ? `/page/${page}` : ''
+            `${process.env.LK21_URL}/rating${Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
 

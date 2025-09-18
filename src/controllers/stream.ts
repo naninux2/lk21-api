@@ -39,15 +39,11 @@ export const streamMovie: TController = async (req, res) => {
 export const streamSeries: TController = async (req, res) => {
     try {
         const { originalUrl } = req;
-        const { season = 1, episode = 1 } = req.query;
-
-        const _ids = originalUrl.split('/').reverse()[1].split('-');
-        const year = _ids.pop();
-
-        const seriesId = _ids.join('-');
+        const newUrl = originalUrl.replace('/episodes/', '');
+        console.log(newUrl);
 
         const axiosRequest = await axios.get(
-            `${process.env.ND_URL}/${seriesId}-season-${season}-episode-${episode}-${year}`
+            `${process.env.ND_URL}/${newUrl}`
         );
 
         const payload = await scrapeStreamSources(req, axiosRequest);

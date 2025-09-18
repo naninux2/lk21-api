@@ -8,7 +8,9 @@ export interface IMovies {
     rating: string;
     url: string;
     qualityResolution: string;
-    genres: string[];
+    genres: { name: string, url: string }[];
+    duration: string;
+    year: string;
 }
 
 export interface IMovieDetails
@@ -18,9 +20,11 @@ export interface IMovieDetails
     synopsis: string;
     duration: string;
     trailerUrl: string;
-    directors: string[];
-    countries: string[];
-    casts: string[];
+    directors: { name: string, url: string }[];
+    countries: { name: string, url: string }[];
+    casts: { name: string, url: string }[];
+    streaming_url: { provider: string; url: string }[];
+    download_url: string;
 }
 
 export interface IStreamSources {
@@ -30,9 +34,7 @@ export interface IStreamSources {
 }
 
 export interface ISetOfGenres {
-    parameter: string;
     name: string;
-    numberOfContents: number;
     url: string;
 }
 
@@ -51,11 +53,13 @@ export interface ISetOfYears {
 
 export interface ISeries extends Omit<IMovies, 'qualityResolution'> {
     episode: number;
+    qualityResolution: string;
 }
 
 export interface ISeasonsList {
     season: number;
-    totalEpisodes: number;
+    // totalEpisodes: number;
+    episodes: { episode: number; title: string; url: string }[];
 }
 
 export interface ISeriesDetails extends Omit<ISeries, 'url'> {
@@ -64,21 +68,37 @@ export interface ISeriesDetails extends Omit<ISeries, 'url'> {
     synopsis: string;
     duration: string;
     trailerUrl: string;
-    directors: string[];
-    countries: string[];
-    casts: string[];
+    directors: { name: string, url: string }[];
+    countries: { name: string, url: string }[];
+    casts: { name: string, url: string }[];
     seasons: ISeasonsList[];
+}
+export interface IEpisodeDetails extends Omit<ISeries, 'url'> {
+    status: string;
+    releaseDate: string;
+    synopsis: string;
+    duration: string;
+    trailerUrl: string;
+    directors: { name: string, url: string }[];
+    countries: { name: string, url: string }[];
+    casts: { name: string, url: string }[];
+    seasons: ISeasonsList[];
+    streaming_url: { provider: string; url: string }[];
 }
 
 export interface ISearchedMoviesOrSeries {
     _id: string;
     title: string;
-    type: 'movie' | 'series';
+    type: string;
     posterImg: string;
     url: string;
-    genres: string[];
-    directors: string[];
-    casts: string[];
+    genres: { name: string, url: string }[];
+    directors: { name: string, url: string }[];
+    casts: { name: string, url: string }[];
+    rating: string;
+    qualityResolution: string;
+    duration: string;
+    year: string;
 }
 
 export interface IDownloads {

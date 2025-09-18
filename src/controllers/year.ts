@@ -39,8 +39,7 @@ export const moviesByYear: TController = async (req, res) => {
         const { year } = req.params;
 
         const axiosRequest = await axios.get(
-            `${process.env.LK21_URL}/year/${year}${
-                Number(page) > 1 ? `/page/${page}` : ''
+            `${process.env.LK21_URL}/year/${year}${Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
 
