@@ -10,6 +10,6 @@ export default {
         user: process.env.DB_USER || 'postgres',
         password: process.env.DB_PASSWORD || '',
         database: process.env.DB_NAME || 'lk21_api',
-        ssl: process.env.NODE_ENV === 'production' ? true : false,
+        ssl: false,
     },
 } satisfies Config;
