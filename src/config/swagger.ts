@@ -13,6 +13,24 @@ const options = {
 
 Unofficial LK21 (LayarKaca21) and NontonDrama APIs for streaming movies, animations, and series with Indonesian subtitles.
 
+## 🔐 Authentication Required
+
+All API endpoints require authentication using an API key. To get started:
+
+1. **Get API Key**: Contact administrator or use CLI to generate API key
+2. **Authenticate**: Click the **🔒 Authorize** button above and enter your API key
+3. **Use API**: All requests will include your API key automatically
+
+### Authentication Methods:
+- **X-API-Key Header**: \`X-API-Key: your_api_key_here\`
+- **Authorization Bearer**: \`Authorization: Bearer your_api_key_here\`
+- **Query Parameter**: \`?apiKey=your_api_key_here\`
+
+### Rate Limits:
+- Daily limit: Usually 1,000 requests per day
+- Monthly limit: Usually 30,000 requests per month
+- Check response headers for current usage: \`X-RateLimit-Daily-Remaining\`
+
 ## Features
 - 🎬 **Movies & Series**: Latest, popular, and top-rated content
 - 🔍 **Search**: Find movies and series by title
@@ -24,10 +42,7 @@ Unofficial LK21 (LayarKaca21) and NontonDrama APIs for streaming movies, animati
 ## Base URL
 \`${process.env.NODE_ENV === 'production' ? 'https://your-domain.com' : 'http://localhost:8080'}\`
 
-## Rate Limiting
-This API implements caching to reduce load on source websites. Please use responsibly.
-
-## Source
+## Sources
 - **LK21**: ${process.env.LK21_URL || 'https://tv15.lk21official.my'}
 - **NontonDrama**: ${process.env.ND_URL || 'https://tv14.nontondrama.click'}
             `,
@@ -80,7 +95,29 @@ This API implements caching to reduce load on source websites. Please use respon
                 description: 'System information and health checks'
             }
         ],
+        security: [
+            {
+                ApiKeyAuth: []
+            },
+            {
+                BearerAuth: []
+            }
+        ],
         components: {
+            securitySchemes: {
+                ApiKeyAuth: {
+                    type: 'apiKey',
+                    in: 'header',
+                    name: 'X-API-Key',
+                    description: 'API Key required for accessing protected endpoints'
+                },
+                BearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'API-Key',
+                    description: 'Bearer token using your API key'
+                }
+            },
             schemas: {
                 Movie: {
                     type: 'object',

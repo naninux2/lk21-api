@@ -29,10 +29,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(morgan('tiny'));
 
-// API Key authentication (optional for now, allows requests without keys)
+// API Key authentication (required for all API endpoints)
 app.use(apiKeyAuth({
-    required: false,
-    skipRoutes: ['/', '/docs', '/api-docs.json', '/health'],
+    required: true,
+    skipRoutes: ['/', '/docs*', '/health', '/favicon.ico'],
     skipMethods: ['OPTIONS']
 }));
 

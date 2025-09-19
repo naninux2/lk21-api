@@ -20,12 +20,27 @@ export const apiKeyAuth = (options: ApiKeyMiddlewareOptions = {}) => {
     return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
         try {
             // Skip authentication for certain routes
-            if (skipRoutes.includes(req.path) || skipMethods.includes(req.method)) {
+            const shouldSkip = skipRoutes.some(route => {
+                if (route.endsWith('*')) {
+                    return req.path.startsWith(route.slice(0, -1));
+                }
+                return req.path === route || req.path.startsWith(route + '/');
+            });
+
+            if (shouldSkip || skipMethods.includes(req.method)) {
                 return next();
             }
 
-            // Get API key from header or query parameter
-            const apiKey = req.headers['x-api-key'] as string || req.query.apiKey as string;
+            // Get API key from header (X-API-Key), Authorization Bearer, or query parameter
+            let apiKey = req.headers['x-api-key'] as string || req.query.apiKey as string;
+
+            // Check Authorization header for Bearer token
+            if (!apiKey) {
+                const authHeader = req.headers.authorization;
+                if (authHeader && authHeader.startsWith('Bearer ')) {
+                    apiKey = authHeader.substring(7);
+                }
+            }
 
             // If no API key provided
             if (!apiKey) {
@@ -35,12 +50,10 @@ export const apiKeyAuth = (options: ApiKeyMiddlewareOptions = {}) => {
 
                 return res.status(401).json({
                     error: 'API key required',
-                    message: 'Please provide an API key in the X-API-Key header or apiKey query parameter',
+                    message: 'Please provide an API key via X-API-Key header, Authorization Bearer token, or apiKey query parameter',
                     code: 'MISSING_API_KEY'
                 });
-            }
-
-            // Get client information
+            }            // Get client information
             const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
             const origin = req.headers.origin as string;
             const userAgent = req.headers['user-agent'] as string;
