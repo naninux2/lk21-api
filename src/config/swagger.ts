@@ -40,7 +40,7 @@ All API endpoints require authentication using an API key. To get started:
 - 🛠️ **Cache Management**: Built-in cache control endpoints
 
 ## Base URL
-\`${process.env.NODE_ENV === 'production' ? 'https://lk21.wanjav.com' : 'http://localhost:8080'}\`
+\`${true ? 'https://lk21.wanjav.com' : 'http://localhost:8080'}\`
 
 ## Sources
 - **LK21**: ${process.env.LK21_URL || 'https://tv6.lk21official.cc'}
@@ -53,10 +53,10 @@ All API endpoints require authentication using an API key. To get started:
         },
         servers: [
             {
-                url: process.env.NODE_ENV === 'production'
+                url: true
                     ? 'https://lk21.wanjav.com'
                     : 'http://localhost:8080',
-                description: process.env.NODE_ENV === 'production'
+                description: true
                     ? 'Production server'
                     : 'Development server'
             }
