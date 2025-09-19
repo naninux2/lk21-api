@@ -40,16 +40,12 @@ All API endpoints require authentication using an API key. To get started:
 - 🛠️ **Cache Management**: Built-in cache control endpoints
 
 ## Base URL
-\`${process.env.NODE_ENV === 'production' ? 'https://your-domain.com' : 'http://localhost:8080'}\`
+\`${process.env.NODE_ENV === 'production' ? 'https://lk21.wanjav.com' : 'http://localhost:8080'}\`
 
 ## Sources
-- **LK21**: ${process.env.LK21_URL || 'https://tv15.lk21official.my'}
-- **NontonDrama**: ${process.env.ND_URL || 'https://tv14.nontondrama.click'}
+- **LK21**: ${process.env.LK21_URL || 'https://tv6.lk21official.cc'}
+- **NontonDrama**: ${process.env.ND_URL || 'https://tv1.nontondrama.my'}
             `,
-            contact: {
-                name: 'GitHub Repository',
-                url: 'https://github.com/febriadj/lk21-api'
-            },
             license: {
                 name: 'MIT',
                 url: 'https://opensource.org/licenses/MIT'
@@ -58,7 +54,7 @@ All API endpoints require authentication using an API key. To get started:
         servers: [
             {
                 url: process.env.NODE_ENV === 'production'
-                    ? 'https://your-domain.com'
+                    ? 'https://lk21.wanjav.com'
                     : 'http://localhost:8080',
                 description: process.env.NODE_ENV === 'production'
                     ? 'Production server'

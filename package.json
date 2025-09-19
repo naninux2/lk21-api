@@ -28,20 +28,14 @@
         "cli:update": "bun cli/api-keys-simple.ts update"
     },
     "repository": {
-        "type": "git",
-        "url": "git+https://github.com/febriadj/lk21-api.git"
+        "type": "git"
     },
     "keywords": [
         "lk21-api",
         "movies-streaming",
         "web-scraping"
     ],
-    "author": "Febriadji",
     "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/febriadj/lk21-api/issues"
-    },
-    "homepage": "https://github.com/febriadj/lk21-api#readme",
     "devDependencies": {
         "@types/cheerio": "^0.22.31",
         "@types/cors": "^2.8.13",
