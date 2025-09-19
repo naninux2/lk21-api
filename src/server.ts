@@ -112,7 +112,7 @@ app.get('/health', (req: Request, res: Response) => {
  *                 documentation:
  *                   type: string
  *                   format: uri
- *                   example: "http://localhost:8080/docs"
+ *                   example: "https://lk21.wanjav.com/docs"
  *                 data:
  *                   type: object
  *                   properties:

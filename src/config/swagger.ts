@@ -174,11 +174,11 @@ All API endpoints require authentication using an API key. To get started:
                         type: 'movie',
                         posterImg: 'https://example.com/poster.jpg',
                         rating: '8.1',
-                        url: 'http://localhost:8080/movies/avatar-the-way-of-water-2022',
+                        url: 'https://lk21.wanjav.com/movies/avatar-the-way-of-water-2022',
                         qualityResolution: 'HD',
                         genres: [
-                            { name: 'Action', url: 'http://localhost:8080/genres/action' },
-                            { name: 'Sci-Fi', url: 'http://localhost:8080/genres/sci-fi' }
+                            { name: 'Action', url: 'https://lk21.wanjav.com/genres/action' },
+                            { name: 'Sci-Fi', url: 'https://lk21.wanjav.com/genres/sci-fi' }
                         ],
                         duration: '3h 12m',
                         year: '2022'
