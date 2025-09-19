@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { NextFunction as Next, Request, Response } from 'express';
 import { scrapeSearchedMoviesOrSeries } from '@/scrapers/search';
 import playwright from 'playwright';
@@ -20,7 +20,7 @@ export const searchedMoviesOrSeries: TController = async (req, res) => {
         const content = await page.content();
         await browser.close();
 
-        const axiosRequest = { data: content } as unknown as axios.AxiosResponse;
+        const axiosRequest = { data: content } as unknown as AxiosResponse;
 
         const payload = await scrapeSearchedMoviesOrSeries(req, axiosRequest);
 
