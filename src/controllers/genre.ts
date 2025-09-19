@@ -2,6 +2,7 @@ import axios from 'axios';
 import { NextFunction as Next, Request, Response } from 'express';
 import { scrapeSetOfGenres } from '@/scrapers/genre';
 import { scrapeMovies } from '@/scrapers/movie';
+import { ErrorResponse, SuccessResponse } from '@/types';
 
 type TController = (req: Request, res: Response, next?: Next) => Promise<void>;
 
@@ -13,15 +14,28 @@ type TController = (req: Request, res: Response, next?: Next) => Promise<void>;
  */
 export const setOfGenres: TController = async (req, res) => {
     try {
-        const axiosRequest = await axios.get(`${process.env.LK21_URL}`);
+        const axiosRequest = await axios.get(`${process.env.LK21_URL}/rekomendasi-film-pintar`);
 
         const payload = await scrapeSetOfGenres(req, axiosRequest);
 
-        res.status(200).json(payload);
+        const successResponse: SuccessResponse<typeof payload> = {
+            success: true,
+            message: 'Set of genres fetched successfully',
+            data: payload,
+        }
+
+        res.status(200).json(successResponse);
+
     } catch (err) {
         console.error(err);
+        const errorResponse: ErrorResponse = {
+            success: false,
+            message: ['Failed to fetch set of genres'],
+            error: (err as Error).message,
+            error_code: '500',
+        }
 
-        res.status(400).json(null);
+        res.status(500).json(errorResponse);
     }
 };
 
@@ -37,17 +51,27 @@ export const moviesByGenre: TController = async (req, res) => {
         const { genre } = req.params;
 
         const axiosRequest = await axios.get(
-            `${process.env.LK21_URL}/genre/${genre.toLowerCase()}${
-                Number(page) > 1 ? `/page/${page}` : ''
+            `${process.env.LK21_URL}/genre/${genre.toLowerCase()}${Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
 
         const payload = await scrapeMovies(req, axiosRequest);
+        const successResponse: SuccessResponse<typeof payload> = {
+            success: true,
+            message: `Movies from ${genre} fetched successfully`,
+            data: payload,
+        }
 
-        res.status(200).json(payload);
+        res.status(200).json(successResponse);
     } catch (err) {
         console.error(err);
+        const errorResponse: ErrorResponse = {
+            success: false,
+            message: ['Failed to fetch movies by genre'],
+            error: (err as Error).message,
+            error_code: '500',
+        }
 
-        res.status(400).json(null);
+        res.status(500).json(errorResponse);
     }
 };

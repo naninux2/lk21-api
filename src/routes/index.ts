@@ -153,63 +153,6 @@ router.get('/movies/:id', cache, movieDetails);
 
 /**
  * @swagger
- * /movies/{id}/streams:
- *   get:
- *     summary: Get movie streaming sources
- *     description: Retrieve streaming URLs for a specific movie (requires Playwright processing)
- *     tags: [Streaming]
- *     parameters:
- *       - $ref: '#/components/parameters/MovieId'
- *     responses:
- *       200:
- *         description: Movie streaming sources
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 streaming_url:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       provider:
- *                         type: string
- *                         example: "Player 1"
- *                       url:
- *                         type: string
- *                         format: uri
- *                         example: "https://example.com/stream"
- */
-// Heavy operations with caching (Playwright routes)
-router.get('/movies/:id/streams', cache, streamMovie);
-
-/**
- * @swagger
- * /movies/{id}/download:
- *   get:
- *     summary: Get movie download links
- *     description: Retrieve download URLs for a specific movie
- *     tags: [Streaming]
- *     parameters:
- *       - $ref: '#/components/parameters/MovieId'
- *     responses:
- *       200:
- *         description: Movie download links
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 download_url:
- *                   type: string
- *                   format: uri
- *                   example: "https://dl.lk21.party/get/movie-id"
- */
-router.get('/movies/:id/download', cache, downloadMovie);
-
-/**
- * @swagger
  * /genres:
  *   get:
  *     summary: Get all genres
@@ -459,48 +402,6 @@ router.get('/top-rated/series', cache, topRatedSeries);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/series/:id', cache, seriesDetails);
-
-/**
- * @swagger
- * /episodes/{id}:
- *   get:
- *     summary: Get episode streaming sources
- *     description: Retrieve streaming URLs and details for a specific episode (requires Playwright processing)
- *     tags: [Streaming]
- *     parameters:
- *       - $ref: '#/components/parameters/EpisodeId'
- *     responses:
- *       200:
- *         description: Episode streaming sources and details
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 _id:
- *                   type: string
- *                   example: "wednesday-2022-episode-1"
- *                 title:
- *                   type: string
- *                   example: "Wednesday's Child Is Full of Woe"
- *                 type:
- *                   type: string
- *                   example: "episode"
- *                 streaming_url:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       provider:
- *                         type: string
- *                         example: "Player 1"
- *                       url:
- *                         type: string
- *                         format: uri
- *                         example: "https://example.com/stream"
- */
-// Heavy Playwright operation
-router.get('/episodes/:id', cache, streamSeries);
 
 /**
  * @swagger

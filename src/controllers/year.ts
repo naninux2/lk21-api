@@ -2,6 +2,7 @@ import axios from 'axios';
 import { NextFunction as Next, Request, Response } from 'express';
 import { scrapeMovies } from '@/scrapers/movie';
 import { scrapeSetOfYears } from '@/scrapers/year';
+import { ErrorResponse, SuccessResponse } from '@/types';
 
 type TController = (req: Request, res: Response, next?: Next) => Promise<void>;
 
@@ -14,16 +15,29 @@ type TController = (req: Request, res: Response, next?: Next) => Promise<void>;
 export const setOfYears: TController = async (req, res) => {
     try {
         const axiosRequest = await axios.get(
-            `${process.env.LK21_URL}/rekomendasi-film-pintar`
+            `${process.env.LK21_URL}/year`
         );
 
         const payload = await scrapeSetOfYears(req, axiosRequest);
 
-        res.status(200).json(payload);
+        const successResponse: SuccessResponse<typeof payload> = {
+            success: true,
+            message: 'Set of years fetched successfully',
+            data: payload,
+        }
+
+        res.status(200).json(successResponse);
+
     } catch (err) {
         console.error(err);
+        const errorResponse: ErrorResponse = {
+            success: false,
+            message: ['Failed to fetch set of years'],
+            error: (err as Error).message,
+            error_code: '500',
+        }
 
-        res.status(400).json(null);
+        res.status(500).json(errorResponse);
     }
 };
 
@@ -45,10 +59,23 @@ export const moviesByYear: TController = async (req, res) => {
 
         const payload = await scrapeMovies(req, axiosRequest);
 
-        res.status(200).json(payload);
+        const successResponse: SuccessResponse<typeof payload> = {
+            success: true,
+            message: `Movies from ${year} fetched successfully`,
+            data: payload,
+        }
+
+        res.status(200).json(successResponse);
     } catch (err) {
         console.error(err);
 
-        res.status(400).json(null);
+        const errorResponse: ErrorResponse = {
+            success: false,
+            message: ['Failed to fetch movies by year'],
+            error: (err as Error).message,
+            error_code: '500',
+        }
+
+        res.status(500).json(errorResponse);
     }
 };

@@ -2,6 +2,7 @@ import axios from 'axios';
 import { NextFunction as Next, Request, Response } from 'express';
 import { scrapeSetOfCountries } from '@/scrapers/country';
 import { scrapeMovies } from '@/scrapers/movie';
+import { ErrorResponse, SuccessResponse } from '@/types';
 
 type TController = (req: Request, res: Response, next?: Next) => Promise<void>;
 
@@ -19,11 +20,24 @@ export const setOfCountries: TController = async (req, res) => {
 
         const payload = await scrapeSetOfCountries(req, axiosRequest);
 
-        res.status(200).json(payload);
+
+        const successResponse: SuccessResponse<typeof payload> = {
+            success: true,
+            message: 'Set of countries fetched successfully',
+            data: payload,
+        }
+
+        res.status(200).json(successResponse);
     } catch (err) {
         console.error(err);
+        const errorResponse: ErrorResponse = {
+            success: false,
+            message: ['Failed to fetch set of countries'],
+            error: (err as Error).message,
+            error_code: '500',
+        }
 
-        res.status(400).json(null);
+        res.status(500).json(errorResponse);
     }
 };
 
@@ -39,17 +53,30 @@ export const moviesByCountry: TController = async (req, res) => {
         const { country } = req.params;
 
         const axiosRequest = await axios.get(
-            `${process.env.LK21_URL}/country/${country.toLowerCase()}${
-                Number(page) > 1 ? `/page/${page}` : ''
+            `${process.env.LK21_URL}/country/${country.toLowerCase()}${Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
 
         const payload = await scrapeMovies(req, axiosRequest);
 
-        res.status(200).json(payload);
+        const successResponse: SuccessResponse<typeof payload> = {
+            success: true,
+            message: `Movies from ${country} fetched successfully`,
+            data: payload,
+        }
+
+        res.status(200).json(successResponse);
+
     } catch (err) {
         console.error(err);
 
-        res.status(400).json(null);
+        const errorResponse: ErrorResponse = {
+            success: false,
+            message: ['Failed to fetch movies by country'],
+            error: (err as Error).message,
+            error_code: '500',
+        }
+
+        res.status(500).json(errorResponse);
     }
 };

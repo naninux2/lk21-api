@@ -21,18 +21,18 @@ export const scrapeSetOfGenres = async (
         protocol,
     } = req;
 
-    $('select[name="rgenre1"]')
-        .find('option')
-        .each((i, el) => {
-            const genreName = $(el).text().trim();
-            const genreValue = $(el).attr('value')?.trim() ?? '';
-            if (genreValue && genreName && genreValue !== 'all') {
-                payload.push({
-                    name: genreName,
-                    url: `${protocol}://${host}/genres/${genreValue}`,
-                });
-            }
+    $('select[name="rgenre1"]').find('option').each((i, el) => {
+        if (i === 0) return;
+
+        const value = $(el).attr('value') ?? '';
+        const name = $(el).text().trim();
+
+        payload.push({
+            name,
+            url: `${protocol}://${host}/countries/${value.toLowerCase()}`,
         });
+
+    });
 
     return payload;
 };

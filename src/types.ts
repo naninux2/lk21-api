@@ -64,15 +64,12 @@ export interface ISetOfGenres {
 }
 
 export interface ISetOfCountries {
-    parameter: string;
     name: string;
-    numberOfContents: number;
     url: string;
 }
 
 export interface ISetOfYears {
-    parameter: string;
-    numberOfContents: number;
+    year: string;
     url: string;
 }
 

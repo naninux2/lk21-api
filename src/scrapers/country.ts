@@ -21,27 +21,16 @@ export const scrapeSetOfCountries = async (
         headers: { host },
     } = req;
 
-    $('select#country > option').each((i, el) => {
-        const target: string[] = $(el).text().split(' ').reverse();
-        const parameters = [...target];
-        parameters.shift();
+    $('select[name="rcountry"]').find('option').each((i, el) => {
+        if (i === 0) return;
 
-        const obj = {} as ISetOfCountries;
-
-        countries.map((country) => {
-            if (country.parameter === parameters.join('-').toLowerCase()) {
-                obj['parameter'] = country.parameter;
-                obj['name'] = country.name;
-                obj['numberOfContents'] = Number(
-                    target[0].substring(1, target[0].length - 1)
-                );
-                obj[
-                    'url'
-                ] = `${protocol}://${host}/countries/${country.parameter}`;
-
-                payload.push(obj);
-            }
+        const value = $(el).attr('value') ?? '';
+        const name = $(el).text().trim();
+        payload.push({
+            name,
+            url: `${protocol}://${host}/countries/${value.toLowerCase()}`,
         });
+
     });
 
     return payload;
