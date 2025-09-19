@@ -2,6 +2,7 @@ import axios from 'axios';
 import { NextFunction as Next, Request, Response, response } from 'express';
 import { scrapeMovieDetails, scrapeMovies } from '@/scrapers/movie';
 import { ErrorResponse, SuccessResponse } from '@/types';
+import { MovieService } from '@/db/services';
 
 type TController = (req: Request, res: Response, next?: Next) => Promise<void>;
 
@@ -21,6 +22,14 @@ export const latestMovies: TController = async (req, res) => {
         );
 
         const payload = await scrapeMovies(req, axiosRequest);
+
+        // Save movies to database (async, don't wait)
+        if (payload.items && payload.items.length > 0) {
+            MovieService.batchCreateMovies(payload.items).catch(error => {
+                console.error('Error saving latest movies to database:', error);
+            });
+        }
+
         const successResponse: SuccessResponse<typeof payload> = {
             success: true,
             message: 'Latest movies fetched successfully',
@@ -56,6 +65,13 @@ export const popularMovies: TController = async (req, res) => {
 
         // scrape popular movies
         const payload = await scrapeMovies(req, axiosRequest);
+
+        // Save movies to database (async, don't wait)
+        if (payload.items && payload.items.length > 0) {
+            MovieService.batchCreateMovies(payload.items).catch(error => {
+                console.error('Error saving popular movies to database:', error);
+            });
+        }
 
         const successResponse: SuccessResponse<typeof payload> = {
             success: true,
@@ -96,6 +112,13 @@ export const recentReleaseMovies: TController = async (req, res) => {
 
         const payload = await scrapeMovies(req, axiosRequest);
 
+        // Save movies to database (async, don't wait)
+        if (payload.items && payload.items.length > 0) {
+            MovieService.batchCreateMovies(payload.items).catch(error => {
+                console.error('Error saving recent release movies to database:', error);
+            });
+        }
+
         const successResponse: SuccessResponse<typeof payload> = {
             success: true,
             message: 'Recent release movies fetched successfully',
@@ -132,6 +155,13 @@ export const topRatedMovies: TController = async (req, res) => {
 
         const payload = await scrapeMovies(req, axiosRequest);
 
+        // Save movies to database (async, don't wait)
+        if (payload.items && payload.items.length > 0) {
+            MovieService.batchCreateMovies(payload.items).catch(error => {
+                console.error('Error saving top rated movies to database:', error);
+            });
+        }
+
         const successResponse: SuccessResponse<typeof payload> = {
             success: true,
             message: 'Top rated movies fetched successfully',
@@ -166,6 +196,11 @@ export const movieDetails: TController = async (req, res) => {
         const axiosRequest = await axios.get(`${process.env.LK21_URL}/${id}`);
 
         const payload = await scrapeMovieDetails(req, axiosRequest);
+
+        // Save movie details to database (async, don't wait)
+        MovieService.createOrUpdateMovie(payload).catch(error => {
+            console.error('Error saving movie details to database:', error);
+        });
 
         const successResponse: SuccessResponse<typeof payload> = {
             success: true,

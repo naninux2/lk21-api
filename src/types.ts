@@ -128,3 +128,60 @@ export interface IDownloads {
     link: string;
     quality: string;
 }
+
+// Database-specific types
+export interface DbMovieWithRelations {
+    id: number;
+    externalId: string;
+    title: string;
+    type: string;
+    posterImg?: string | null;
+    rating?: string | null;
+    url?: string | null;
+    qualityResolution?: string | null;
+    quality?: string | null;
+    duration?: string | null;
+    year?: string | null;
+    releaseDate?: string | null;
+    synopsis?: string | null;
+    trailerUrl?: string | null;
+    downloadUrl?: string | null;
+    genres: { id: number; name: string; slug: string }[];
+    countries: { id: number; name: string; slug: string }[];
+    directors: { id: number; name: string; url?: string }[];
+    casts: { id: number; name: string; url?: string }[];
+    streamingUrls: { id: number; provider: string; url: string }[];
+}
+
+export interface DbSeriesWithRelations {
+    id: number;
+    externalId: string;
+    title: string;
+    type: string;
+    posterImg?: string | null;
+    rating?: string | null;
+    url?: string | null;
+    qualityResolution?: string | null;
+    duration?: string | null;
+    year?: string | null;
+    status?: string | null;
+    releaseDate?: string | null;
+    synopsis?: string | null;
+    trailerUrl?: string | null;
+    episode?: number | null;
+    genres: { id: number; name: string; slug: string }[];
+    countries: { id: number; name: string; slug: string }[];
+    directors: { id: number; name: string; url?: string }[];
+    casts: { id: number; name: string; url?: string }[];
+    seasons: {
+        id: number;
+        season: number;
+        episodes: {
+            id: number;
+            episode: number;
+            title: string;
+            url?: string;
+            streamingUrls: { id: number; provider: string; url: string }[];
+        }[];
+    }[];
+}
