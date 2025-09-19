@@ -1,7 +1,7 @@
-import { Request } from 'express';
+import { Request, response } from 'express';
 import cheerio from 'cheerio';
 import { AxiosResponse } from 'axios';
-import { IMovies, IMovieDetails } from '@/types';
+import { IMovies, IMovieDetails, PaginationResponse } from '@/types';
 
 /**
  * Scrape movies asynchronously
@@ -12,7 +12,7 @@ import { IMovies, IMovieDetails } from '@/types';
 export const scrapeMovies = async (
     req: Request,
     res: AxiosResponse
-): Promise<IMovies[]> => {
+): Promise<PaginationResponse<IMovies>> => {
     const $: cheerio.Root = cheerio.load(res.data);
     const payload: IMovies[] = [];
     const {
@@ -68,7 +68,27 @@ export const scrapeMovies = async (
             payload.push(obj);
         });
 
-    return payload;
+    const totalPages = $("body > main > div.main-section > div > nav > nav > ul > li:nth-child(4) > a").attr('href')?.split('/').reverse()[0] ?? '';
+
+    const responseData: PaginationResponse<IMovies> = {
+        items: payload,
+        total_page: parseInt(totalPages) || 1,
+        total_items: payload.length,
+        offset: 0,
+        limit: payload.length,
+        page: parseInt(req.query.page as string) || 1,
+        next_page:
+            (parseInt(req.query.page as string) || 1) + 1 >
+                parseInt(totalPages)
+                ? undefined
+                : (parseInt(req.query.page as string) || 1) + 1,
+        prev_page:
+            (parseInt(req.query.page as string) || 1) - 1 < 1
+                ? undefined
+                : (parseInt(req.query.page as string) || 1) - 1,
+    }
+
+    return responseData
 };
 
 /**

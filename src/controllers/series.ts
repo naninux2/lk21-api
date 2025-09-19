@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { NextFunction as Next, Request, Response } from 'express';
 import { scrapeSeries, scrapeSeriesDetails } from '@/scrapers/series';
+import { ErrorResponse, SuccessResponse } from '@/types';
 
 type TController = (req: Request, res: Response, next?: Next) => Promise<void>;
 
@@ -15,18 +16,27 @@ export const latestSeries: TController = async (req, res) => {
         const { page = 0 } = req.query;
 
         const axiosRequest = await axios.get(
-            `${process.env.ND_URL}/latest-series${
-                Number(page) > 1 ? `/page/${page}` : ''
+            `${process.env.ND_URL}/latest-series${Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
 
         const payload = await scrapeSeries(req, axiosRequest);
+        const successResponse: SuccessResponse<typeof payload> = {
+            success: true,
+            message: 'Latest series fetched successfully',
+            data: payload,
+        }
 
-        res.status(200).json(payload);
+        res.status(200).json(successResponse);
     } catch (err) {
         console.error(err);
-
-        res.status(400).json(null);
+        const errorResponse: ErrorResponse = {
+            success: false,
+            message: ['Failed to fetch latest series'],
+            error: (err as Error).message,
+            error_code: '500',
+        }
+        res.status(500).json(errorResponse);
     }
 };
 
@@ -41,18 +51,30 @@ export const popularSeries: TController = async (req, res) => {
         const { page = 0 } = req.query;
 
         const axiosRequest = await axios.get(
-            `${process.env.ND_URL}/populer${
-                Number(page) > 1 ? `/page/${page}` : ''
+            `${process.env.ND_URL}/populer${Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
 
         const payload = await scrapeSeries(req, axiosRequest);
 
-        res.status(200).json(payload);
+        const successResponse: SuccessResponse<typeof payload> = {
+            success: true,
+            message: 'Popular series fetched successfully',
+            data: payload,
+        }
+
+        res.status(200).json(successResponse);
     } catch (err) {
         console.error(err);
 
-        res.status(400).json(null);
+        const errorResponse: ErrorResponse = {
+            success: false,
+            message: ['Failed to fetch popular series'],
+            error: (err as Error).message,
+            error_code: '500',
+        }
+
+        res.status(500).json(errorResponse);
     }
 };
 
@@ -67,18 +89,31 @@ export const recentReleaseSeries: TController = async (req, res) => {
         const { page = 0 } = req.query;
 
         const axiosRequest = await axios.get(
-            `${process.env.ND_URL}/release${
-                Number(page) > 1 ? `/page/${page}` : ''
+            `${process.env.ND_URL}/release${Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
 
         const payload = await scrapeSeries(req, axiosRequest);
 
-        res.status(200).json(payload);
+        const successResponse: SuccessResponse<typeof payload> = {
+            success: true,
+            message: 'Recent release series fetched successfully',
+            data: payload,
+        }
+
+        res.status(200).json(successResponse);
+
     } catch (err) {
         console.error(err);
 
-        res.status(400).json(null);
+        const errorResponse: ErrorResponse = {
+            success: false,
+            message: ['Failed to fetch recent release series'],
+            error: (err as Error).message,
+            error_code: '500',
+        }
+
+        res.status(500).json(errorResponse);
     }
 };
 
@@ -93,18 +128,30 @@ export const topRatedSeries: TController = async (req, res) => {
         const { page = 0 } = req.query;
 
         const axiosRequest = await axios.get(
-            `${process.env.ND_URL}/rating${
-                Number(page) > 1 ? `/page/${page}` : ''
+            `${process.env.ND_URL}/rating${Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
 
         const payload = await scrapeSeries(req, axiosRequest);
 
-        res.status(200).json(payload);
+        const successResponse: SuccessResponse<typeof payload> = {
+            success: true,
+            message: 'Top rated series fetched successfully',
+            data: payload,
+        }
+
+        res.status(200).json(successResponse);
     } catch (err) {
         console.error(err);
 
-        res.status(400).json(null);
+        const errorResponse: ErrorResponse = {
+            success: false,
+            message: ['Failed to fetch top rated series'],
+            error: (err as Error).message,
+            error_code: '500',
+        }
+
+        res.status(500).json(errorResponse);
     }
 };
 
@@ -122,10 +169,23 @@ export const seriesDetails: TController = async (req, res) => {
 
         const payload = await scrapeSeriesDetails(req, axiosRequest);
 
-        res.status(200).json(payload);
+        const successResponse: SuccessResponse<typeof payload> = {
+            success: true,
+            message: 'Series details fetched successfully',
+            data: payload,
+        }
+
+        res.status(200).json(successResponse);
     } catch (err) {
         console.error(err);
 
-        res.status(400).json(null);
+        const errorResponse: ErrorResponse = {
+            success: false,
+            message: ['Failed to fetch series details'],
+            error: (err as Error).message,
+            error_code: '500',
+        }
+
+        res.status(500).json(errorResponse);
     }
 };

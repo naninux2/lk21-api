@@ -1,6 +1,7 @@
 import axios from 'axios';
-import { NextFunction as Next, Request, Response } from 'express';
+import { NextFunction as Next, Request, Response, response } from 'express';
 import { scrapeMovieDetails, scrapeMovies } from '@/scrapers/movie';
+import { ErrorResponse, SuccessResponse } from '@/types';
 
 type TController = (req: Request, res: Response, next?: Next) => Promise<void>;
 
@@ -18,14 +19,23 @@ export const latestMovies: TController = async (req, res) => {
             `${process.env.LK21_URL}/latest${Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
-        console.log(process.env.LK21_URL + `/latest${Number(page) > 1 ? `/page/${page}` : ''}`);
 
         const payload = await scrapeMovies(req, axiosRequest);
-        res.status(200).json(payload);
+        const successResponse: SuccessResponse<typeof payload> = {
+            success: true,
+            message: 'Latest movies fetched successfully',
+            data: payload,
+        }
+        res.status(200).json(successResponse);
     } catch (err) {
         console.error(err);
-
-        res.status(400).json(null);
+        const errorResponse: ErrorResponse = {
+            success: false,
+            message: ['Failed to fetch latest movies'],
+            error: (err as Error).message,
+            error_code: '500',
+        }
+        res.status(500).json(errorResponse);
     }
 };
 
@@ -47,11 +57,25 @@ export const popularMovies: TController = async (req, res) => {
         // scrape popular movies
         const payload = await scrapeMovies(req, axiosRequest);
 
-        res.status(200).json(payload);
+        const successResponse: SuccessResponse<typeof payload> = {
+            success: true,
+            message: 'Popular movies fetched successfully',
+            data: payload,
+        }
+
+        res.status(200).json(successResponse);
+
     } catch (err) {
         console.error(err);
 
-        res.status(400).json(null);
+        const errorResponse: ErrorResponse = {
+            success: false,
+            message: ['Failed to fetch popular movies'],
+            error: (err as Error).message,
+            error_code: '500',
+        }
+
+        res.status(500).json(errorResponse);
     }
 };
 
@@ -72,11 +96,22 @@ export const recentReleaseMovies: TController = async (req, res) => {
 
         const payload = await scrapeMovies(req, axiosRequest);
 
-        res.status(200).json(payload);
+        const successResponse: SuccessResponse<typeof payload> = {
+            success: true,
+            message: 'Recent release movies fetched successfully',
+            data: payload,
+        }
+
+        res.status(200).json(successResponse);
     } catch (err) {
         console.error(err);
-
-        res.status(400).json(null);
+        const errorResponse: ErrorResponse = {
+            success: false,
+            message: ['Failed to fetch recent release movies'],
+            error: (err as Error).message,
+            error_code: '500',
+        }
+        res.status(500).json(errorResponse);
     }
 };
 
@@ -97,11 +132,24 @@ export const topRatedMovies: TController = async (req, res) => {
 
         const payload = await scrapeMovies(req, axiosRequest);
 
-        res.status(200).json(payload);
+        const successResponse: SuccessResponse<typeof payload> = {
+            success: true,
+            message: 'Top rated movies fetched successfully',
+            data: payload,
+        }
+
+        res.status(200).json(successResponse);
     } catch (err) {
         console.error(err);
 
-        res.status(400).json(null);
+        const errorResponse: ErrorResponse = {
+            success: false,
+            message: ['Failed to fetch top rated movies'],
+            error: (err as Error).message,
+            error_code: '500',
+        }
+
+        res.status(500).json(errorResponse);
     }
 };
 
@@ -119,10 +167,21 @@ export const movieDetails: TController = async (req, res) => {
 
         const payload = await scrapeMovieDetails(req, axiosRequest);
 
-        res.status(200).json(payload);
+        const successResponse: SuccessResponse<typeof payload> = {
+            success: true,
+            message: 'Movie details fetched successfully',
+            data: payload,
+        }
+
+        res.status(200).json(successResponse);
     } catch (err) {
         console.error(err);
-
-        res.status(400).json(null);
+        const errorResponse: ErrorResponse = {
+            success: false,
+            message: ['Failed to fetch movie details'],
+            error: (err as Error).message,
+            error_code: '500',
+        }
+        res.status(500).json(errorResponse);
     }
 };

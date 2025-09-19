@@ -1,7 +1,7 @@
 import cheerio from 'cheerio';
 import { AxiosResponse } from 'axios';
 import { Request } from 'express';
-import { ISeasonsList, ISeries, ISeriesDetails } from '@/types';
+import { ISeasonsList, ISeries, ISeriesDetails, PaginationResponse } from '@/types';
 import playwright from 'playwright';
 
 /**
@@ -13,7 +13,7 @@ import playwright from 'playwright';
 export const scrapeSeries = async (
     req: Request,
     res: AxiosResponse
-): Promise<ISeries[]> => {
+): Promise<PaginationResponse<ISeries>> => {
     const $: cheerio.Root = cheerio.load(res.data);
     const payload: ISeries[] = [];
     const {
@@ -69,7 +69,27 @@ export const scrapeSeries = async (
             payload.push(obj);
         });
 
-    return payload;
+    const totalPages = $("body > main > div.main-section > div > nav > nav > ul > li:nth-child(4) > a").attr('href')?.split('/').reverse()[0] ?? '';
+
+    const responseData: PaginationResponse<ISeries> = {
+        items: payload,
+        total_page: parseInt(totalPages) || 1,
+        total_items: payload.length,
+        offset: 0,
+        limit: payload.length,
+        page: parseInt(req.query.page as string) || 1,
+        next_page:
+            (parseInt(req.query.page as string) || 1) + 1 >
+                parseInt(totalPages)
+                ? undefined
+                : (parseInt(req.query.page as string) || 1) + 1,
+        prev_page:
+            (parseInt(req.query.page as string) || 1) - 1 < 1
+                ? undefined
+                : (parseInt(req.query.page as string) || 1) - 1,
+    }
+
+    return responseData;
 };
 
 /**

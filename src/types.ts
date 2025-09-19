@@ -1,5 +1,30 @@
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
+export interface PaginationResponse<T> {
+    items: T[];
+    total_items: number;
+    total_page: number;
+    offset: number;
+    limit: number;
+    page: number;
+    next_page?: number | null;
+    prev_page?: number | null;
+}
+
+export interface SuccessResponse<T> {
+    success: boolean;
+    message: string;
+    data: T;
+}
+
+export interface ErrorResponse {
+    success: boolean;
+    message: Array<string>;
+    error?: string;
+    error_code?: '400' | '401' | '403' | '404' | '422' | '500' | string;
+    data?: Record<string, unknown> | string;
+}
+
 export interface IMovies {
     _id: string;
     title: string;
