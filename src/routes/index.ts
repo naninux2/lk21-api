@@ -403,7 +403,70 @@ router.get('/top-rated/series', cache, topRatedSeries);
  */
 router.get('/series/:id', cache, seriesDetails);
 
-// add stream routes streamSeries
+/**
+ * @swagger
+ * /episodes/{id}:
+ *   get:
+ *     summary: Get episode streaming sources
+ *     description: Retrieve streaming sources and details for a specific episode
+ *     tags: [Streaming]
+ *     parameters:
+ *       - $ref: '#/components/parameters/EpisodeId'
+ *     responses:
+ *       200:
+ *         description: Episode streaming sources
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     title:
+ *                       type: string
+ *                       description: Episode title
+ *                       example: "Wednesday - Episode 1"
+ *                     episode:
+ *                       type: string
+ *                       description: Episode number
+ *                       example: "Episode 1"
+ *                     streaming_url:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           provider:
+ *                             type: string
+ *                             description: Streaming provider name
+ *                             example: "Server 1"
+ *                           url:
+ *                             type: string
+ *                             format: uri
+ *                             description: Streaming URL
+ *                             example: "https://example.com/stream/episode1"
+ *                       description: Available streaming sources
+ *                     download_url:
+ *                       type: string
+ *                       format: uri
+ *                       description: Download URL if available
+ *                       example: "https://example.com/download/episode1"
+ *       404:
+ *         description: Episode not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router.get('/episodes/:id', cache, streamSeries);
 
 /**
