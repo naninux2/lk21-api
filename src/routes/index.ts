@@ -403,6 +403,9 @@ router.get('/top-rated/series', cache, topRatedSeries);
  */
 router.get('/series/:id', cache, seriesDetails);
 
+// add stream routes streamSeries
+router.get('/episodes/:id', cache, streamSeries);
+
 /**
  * @swagger
  * /search/{title}:
