@@ -175,6 +175,34 @@ export const scrapeMovieDetails = async (
         }
     });
 
+    $("div.info-tag").find("span").each((i, el) => {
+        const spanText = $(el).text().toLowerCase().trim();
+        // quality
+        if (spanText.includes('hdrip')) {
+            obj['quality'] = 'HDRip';
+        } else if (spanText.includes('webdl')) {
+            obj['quality'] = 'WEBDL';
+        } else if (spanText.includes('web-dl')) {
+            obj['quality'] = 'WEBDL';
+        } else if (spanText.includes('hd')) {
+            obj['quality'] = 'HD';
+        } else if (spanText.includes('sd')) {
+            obj['quality'] = 'SD';
+        } else if (spanText.includes('cam')) {
+            obj['quality'] = 'CAM';
+        } else if (spanText.includes('bluray')) {
+            obj['quality'] = 'BLURAY';
+        }
+
+        if (spanText.includes('.')) {
+            obj['rating'] = spanText;
+        }
+
+        if (spanText.includes('h ') || spanText.includes('m ')) {
+            obj['duration'] = spanText;
+        }
+    });
+
     obj['synopsis'] = $('.synopsis.collapsed').text().trim();
     obj['trailerUrl'] =
         $('a.yt-lightbox').attr('href') ?? '';

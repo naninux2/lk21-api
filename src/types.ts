@@ -50,6 +50,7 @@ export interface IMovieDetails
     casts: { name: string, url: string }[];
     streaming_url: { provider: string; url: string }[];
     download_url: string;
+    rating: string;
 }
 
 export interface IStreamSources {
