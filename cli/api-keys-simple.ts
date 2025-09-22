@@ -50,7 +50,7 @@ program
 
             const table = new Table({
                 head: ['Property', 'Value'],
-                colWidths: [20, 50]
+                colWidths: [20, 100]
             });
 
             table.push(

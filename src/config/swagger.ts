@@ -13,12 +13,12 @@ const options = {
 
 Unofficial LK21 (LayarKaca21) and NontonDrama APIs for streaming movies, animations, and series with Indonesian subtitles.
 
-## 🔐 Authentication Required
+## Authentication Required
 
 All API endpoints require authentication using an API key. To get started:
 
 1. **Get API Key**: Contact administrator or use CLI to generate API key
-2. **Authenticate**: Click the **🔒 Authorize** button above and enter your API key
+2. **Authenticate**: Click the **Authorize** button above and enter your API key
 3. **Use API**: All requests will include your API key automatically
 
 ### Authentication Methods:
@@ -32,12 +32,12 @@ All API endpoints require authentication using an API key. To get started:
 - Check response headers for current usage: \`X-RateLimit-Daily-Remaining\`
 
 ## Features
-- 🎬 **Movies & Series**: Latest, popular, and top-rated content
-- 🔍 **Search**: Find movies and series by title
-- 🏷️ **Categories**: Browse by genre, country, and release year
-- 📺 **Streaming**: Get streaming sources and episode details
-- ⚡ **Caching**: Redis-powered caching for better performance
-- 🛠️ **Cache Management**: Built-in cache control endpoints
+- **Movies & Series**: Latest, popular, and top-rated content
+- **Search**: Find movies and series by title
+- **Categories**: Browse by genre, country, and release year
+- **Streaming**: Get streaming sources and episode details
+- **Caching**: Redis-powered caching for better performance
+- **Cache Management**: Built-in cache control endpoints
 
 ## Base URL
 \`https://lk21.wanjav.com\`
