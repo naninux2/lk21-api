@@ -151,7 +151,6 @@ export const scrapeMovieDetails = async (
                     });
                 break;
             case 'bintang film':
-                console.log("masuk bintang film");
                 $(el)
                     .find('a')
                     .each((i, castEl) => {
