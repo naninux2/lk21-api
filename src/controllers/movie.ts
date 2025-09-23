@@ -6,6 +6,9 @@ import { MovieService } from '@/db/services';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 puppeteer.use(StealthPlugin());
+import fetch from 'node-fetch';
+import { HttpsProxyAgent } from 'https-proxy-agent';
+import https from 'https';
 
 type TController = (req: Request, res: Response, next?: Next) => Promise<void>;
 
@@ -19,31 +22,44 @@ export const latestMovies: TController = async (req, res) => {
     try {
         const { page = 0 } = req.query;
 
-        const browser = await puppeteer.launch({
-            headless: false, // Avoid headless if site fingerprinting is aggressive
-            args: ['--no-sandbox'], // Required in some CI environments — otherwise omit for local runs
+        const username = process.env.OXYLABS_USERNAME;
+        const password = process.env.OXYLABS_PASSWORD;
+
+        const body = {
+            source: "universal",
+            url: `${process.env.LK21_URL}/latest${Number(page) > 1 ? `/page/${page}` : ''}`,
+            // 'render': 'html' // If page type requires
+        };
+
+        const options = {
+            hostname: "realtime.oxylabs.io",
+            path: "/v1/queries",
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: "Basic " + Buffer.from(`${username}:${password}`).toString("base64"),
+            },
+        };
+
+        const request = await https.request(options);
+        request.write(JSON.stringify(body));
+        const response = await new Promise((resolve, reject) => {
+            let data = "";
+            request.on("response", (res) => {
+                res.on("data", (chunk) => {
+                    data += chunk;
+                });
+                res.on("end", () => {
+                    resolve(data);
+                });
+            });
+            request.on("error", (error) => {
+                reject(error);
+            });
+            request.end();
         });
-
-        const pageBrowser = await browser.newPage();
-
-        await pageBrowser.setUserAgent(
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
-        );
-
-        await pageBrowser.setViewport({
-            width: Math.floor(1024 + Math.random() * 100),
-            height: Math.floor(768 + Math.random() * 100),
-        });
-
-        await pageBrowser.goto(
-            `${process.env.LK21_URL}/latest${Number(page) > 1 ? `/page/${page}` : ''}`,
-            { waitUntil: 'domcontentloaded' }
-        );
-        await pageBrowser.waitForSelector('.main-header', { timeout: 10000 });
-        const html = await pageBrowser.content();
-        await browser.close();
-
-        // Mock axios response object
+        const obj = JSON.parse(response as string);
+        const html = obj.results[0].content;
         const axiosRequest = {
             data: html,
             status: 200,
@@ -90,30 +106,45 @@ export const latestMovies: TController = async (req, res) => {
 export const popularMovies: TController = async (req, res) => {
     try {
         const { page = 0 } = req.query;
-        const browser = await puppeteer.launch({
-            headless: false, // Avoid headless if site fingerprinting is aggressive
-            args: ['--no-sandbox'], // Required in some CI environments — otherwise omit for local runs
+
+        const username = process.env.OXYLABS_USERNAME;
+        const password = process.env.OXYLABS_PASSWORD;
+
+        const body = {
+            source: "universal",
+            url: `${process.env.LK21_URL}/popular${Number(page) > 1 ? `/page/${page}` : ''}`,
+            // 'render': 'html' // If page type requires
+        };
+
+        const options = {
+            hostname: "realtime.oxylabs.io",
+            path: "/v1/queries",
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: "Basic " + Buffer.from(`${username}:${password}`).toString("base64"),
+            },
+        };
+
+        const request = await https.request(options);
+        request.write(JSON.stringify(body));
+        const response = await new Promise((resolve, reject) => {
+            let data = "";
+            request.on("response", (res) => {
+                res.on("data", (chunk) => {
+                    data += chunk;
+                });
+                res.on("end", () => {
+                    resolve(data);
+                });
+            });
+            request.on("error", (error) => {
+                reject(error);
+            });
+            request.end();
         });
-
-        const pageBrowser = await browser.newPage();
-        await pageBrowser.setUserAgent(
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
-        );
-
-        await pageBrowser.setViewport({
-            width: Math.floor(1024 + Math.random() * 100),
-            height: Math.floor(768 + Math.random() * 100),
-        });
-
-        await pageBrowser.goto(
-            `${process.env.LK21_URL}/popular${Number(page) > 1 ? `/page/${page}` : ''}`,
-            { waitUntil: 'domcontentloaded' }
-        );
-        await pageBrowser.waitForSelector('.main-header', { timeout: 10000 });
-        const html = await pageBrowser.content();
-        await browser.close();
-
-        // Mock axios response object
+        const obj = JSON.parse(response as string);
+        const html = obj.results[0].content;
         const axiosRequest = {
             data: html,
             status: 200,
@@ -166,30 +197,45 @@ export const popularMovies: TController = async (req, res) => {
 export const recentReleaseMovies: TController = async (req, res) => {
     try {
         const { page = 0 } = req.query;
-        const browser = await puppeteer.launch({
-            headless: false, // Avoid headless if site fingerprinting is aggressive
-            args: ['--no-sandbox'], // Required in some CI environments — otherwise omit for local runs
+
+        const username = process.env.OXYLABS_USERNAME;
+        const password = process.env.OXYLABS_PASSWORD;
+
+        const body = {
+            source: "universal",
+            url: `${process.env.LK21_URL}/release${Number(page) > 1 ? `/page/${page}` : ''}`,
+            // 'render': 'html' // If page type requires
+        };
+
+        const options = {
+            hostname: "realtime.oxylabs.io",
+            path: "/v1/queries",
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: "Basic " + Buffer.from(`${username}:${password}`).toString("base64"),
+            },
+        };
+
+        const request = await https.request(options);
+        request.write(JSON.stringify(body));
+        const response = await new Promise((resolve, reject) => {
+            let data = "";
+            request.on("response", (res) => {
+                res.on("data", (chunk) => {
+                    data += chunk;
+                });
+                res.on("end", () => {
+                    resolve(data);
+                });
+            });
+            request.on("error", (error) => {
+                reject(error);
+            });
+            request.end();
         });
-
-        const pageBrowser = await browser.newPage();
-        await pageBrowser.setUserAgent(
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
-        );
-
-        await pageBrowser.setViewport({
-            width: Math.floor(1024 + Math.random() * 100),
-            height: Math.floor(768 + Math.random() * 100),
-        });
-
-        await pageBrowser.goto(
-            `${process.env.LK21_URL}/release${Number(page) > 1 ? `/page/${page}` : ''}`,
-            { waitUntil: 'domcontentloaded' }
-        );
-        await pageBrowser.waitForSelector('.main-header', { timeout: 10000 });
-        const html = await pageBrowser.content();
-        await browser.close();
-
-        // Mock axios response object
+        const obj = JSON.parse(response as string);
+        const html = obj.results[0].content;
         const axiosRequest = {
             data: html,
             status: 200,
@@ -237,30 +283,45 @@ export const recentReleaseMovies: TController = async (req, res) => {
 export const topRatedMovies: TController = async (req, res) => {
     try {
         const { page = 0 } = req.query;
-        const browser = await puppeteer.launch({
-            headless: false, // Avoid headless if site fingerprinting is aggressive
-            args: ['--no-sandbox'], // Required in some CI environments — otherwise omit for local runs
+
+        const username = process.env.OXYLABS_USERNAME;
+        const password = process.env.OXYLABS_PASSWORD;
+
+        const body = {
+            source: "universal",
+            url: `${process.env.LK21_URL}/rating${Number(page) > 1 ? `/page/${page}` : ''}`,
+            // 'render': 'html' // If page type requires
+        };
+
+        const options = {
+            hostname: "realtime.oxylabs.io",
+            path: "/v1/queries",
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: "Basic " + Buffer.from(`${username}:${password}`).toString("base64"),
+            },
+        };
+
+        const request = await https.request(options);
+        request.write(JSON.stringify(body));
+        const response = await new Promise((resolve, reject) => {
+            let data = "";
+            request.on("response", (res) => {
+                res.on("data", (chunk) => {
+                    data += chunk;
+                });
+                res.on("end", () => {
+                    resolve(data);
+                });
+            });
+            request.on("error", (error) => {
+                reject(error);
+            });
+            request.end();
         });
-
-        const pageBrowser = await browser.newPage();
-        await pageBrowser.setUserAgent(
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
-        );
-
-        await pageBrowser.setViewport({
-            width: Math.floor(1024 + Math.random() * 100),
-            height: Math.floor(768 + Math.random() * 100),
-        });
-
-        await pageBrowser.goto(
-            `${process.env.LK21_URL}/rating${Number(page) > 1 ? `/page/${page}` : ''}`,
-            { waitUntil: 'domcontentloaded' }
-        );
-        await pageBrowser.waitForSelector('.main-header', { timeout: 10000 });
-        const html = await pageBrowser.content();
-        await browser.close();
-
-        // Mock axios response object
+        const obj = JSON.parse(response as string);
+        const html = obj.results[0].content;
         const axiosRequest = {
             data: html,
             status: 200,
@@ -310,30 +371,45 @@ export const topRatedMovies: TController = async (req, res) => {
 export const movieDetails: TController = async (req, res) => {
     try {
         const { id } = req.params;
-        const browser = await puppeteer.launch({
-            headless: false, // Avoid headless if site fingerprinting is aggressive
-            args: ['--no-sandbox'], // Required in some CI environments — otherwise omit for local runs
+
+        const username = process.env.OXYLABS_USERNAME;
+        const password = process.env.OXYLABS_PASSWORD;
+
+        const body = {
+            source: "universal",
+            url: `${process.env.LK21_URL}/${id}`,
+            // 'render': 'html' // If page type requires
+        };
+
+        const options = {
+            hostname: "realtime.oxylabs.io",
+            path: "/v1/queries",
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: "Basic " + Buffer.from(`${username}:${password}`).toString("base64"),
+            },
+        };
+
+        const request = await https.request(options);
+        request.write(JSON.stringify(body));
+        const response = await new Promise((resolve, reject) => {
+            let data = "";
+            request.on("response", (res) => {
+                res.on("data", (chunk) => {
+                    data += chunk;
+                });
+                res.on("end", () => {
+                    resolve(data);
+                });
+            });
+            request.on("error", (error) => {
+                reject(error);
+            });
+            request.end();
         });
-
-        const pageBrowser = await browser.newPage();
-        await pageBrowser.setUserAgent(
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
-        );
-
-        await pageBrowser.setViewport({
-            width: Math.floor(1024 + Math.random() * 100),
-            height: Math.floor(768 + Math.random() * 100),
-        });
-
-        await pageBrowser.goto(
-            `${process.env.LK21_URL}/${id}`,
-            { waitUntil: 'domcontentloaded' }
-        );
-        await pageBrowser.waitForSelector('.main-header', { timeout: 10000 });
-        const html = await pageBrowser.content();
-        await browser.close();
-
-        // Mock axios response object
+        const obj = JSON.parse(response as string);
+        const html = obj.results[0].content;
         const axiosRequest = {
             data: html,
             status: 200,
