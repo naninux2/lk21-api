@@ -3,7 +3,7 @@ import { NextFunction as Next, Request, Response } from 'express';
 import { scrapeMovies } from '@/scrapers/movie';
 import { scrapeSetOfYears } from '@/scrapers/year';
 import { ErrorResponse, SuccessResponse } from '@/types';
-import https from 'https';
+import { ProxyManager } from '@/utils/proxy';
 
 type TController = (req: Request, res: Response, next?: Next) => Promise<void>;
 
@@ -15,53 +15,8 @@ type TController = (req: Request, res: Response, next?: Next) => Promise<void>;
  */
 export const setOfYears: TController = async (req, res) => {
     try {
-        const username = process.env.OXYLABS_USERNAME;
-        const password = process.env.OXYLABS_PASSWORD;
-
-        const body = {
-            source: "universal",
-            url: `${process.env.LK21_URL}/year`,
-            // 'render': 'html' // If page type requires
-        };
-
-        const options = {
-            hostname: "realtime.oxylabs.io",
-            path: "/v1/queries",
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: "Basic " + Buffer.from(`${username}:${password}`).toString("base64"),
-            },
-        };
-
-        const request = await https.request(options);
-        request.write(JSON.stringify(body));
-        const response = await new Promise((resolve, reject) => {
-            let data = "";
-            request.on("response", (res) => {
-                res.on("data", (chunk) => {
-                    data += chunk;
-                });
-                res.on("end", () => {
-                    resolve(data);
-                });
-            });
-            request.on("error", (error) => {
-                reject(error);
-            });
-            request.end();
-        });
-        const obj = JSON.parse(response as string);
-        const html = obj.results[0].content;
-        const axiosRequest = {
-            data: html,
-            status: 200,
-            statusText: 'OK',
-            headers: new axios.AxiosHeaders(),
-            config: {
-                headers: new axios.AxiosHeaders(),
-            },
-        } as axios.AxiosResponse;
+        const url = `${process.env.LK21_URL}/year`;
+        const axiosRequest = await ProxyManager.makeRequestWithProxy(url);
 
         const payload = await scrapeSetOfYears(req, axiosRequest);
 
@@ -97,53 +52,8 @@ export const moviesByYear: TController = async (req, res) => {
         const { page = 0 } = req.query;
         const { year } = req.params;
 
-        const username = process.env.OXYLABS_USERNAME;
-        const password = process.env.OXYLABS_PASSWORD;
-
-        const body = {
-            source: "universal",
-            url: `${process.env.LK21_URL}/year/${year}${Number(page) > 1 ? `/page/${page}` : ''}`,
-            // 'render': 'html' // If page type requires
-        };
-
-        const options = {
-            hostname: "realtime.oxylabs.io",
-            path: "/v1/queries",
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: "Basic " + Buffer.from(`${username}:${password}`).toString("base64"),
-            },
-        };
-
-        const request = await https.request(options);
-        request.write(JSON.stringify(body));
-        const response = await new Promise((resolve, reject) => {
-            let data = "";
-            request.on("response", (res) => {
-                res.on("data", (chunk) => {
-                    data += chunk;
-                });
-                res.on("end", () => {
-                    resolve(data);
-                });
-            });
-            request.on("error", (error) => {
-                reject(error);
-            });
-            request.end();
-        });
-        const obj = JSON.parse(response as string);
-        const html = obj.results[0].content;
-        const axiosRequest = {
-            data: html,
-            status: 200,
-            statusText: 'OK',
-            headers: new axios.AxiosHeaders(),
-            config: {
-                headers: new axios.AxiosHeaders(),
-            },
-        } as axios.AxiosResponse;
+        const url = `${process.env.LK21_URL}/year/${year}${Number(page) > 1 ? `/page/${page}` : ''}`;
+        const axiosRequest = await ProxyManager.makeRequestWithProxy(url);
 
         const payload = await scrapeMovies(req, axiosRequest);
 

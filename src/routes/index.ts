@@ -6,10 +6,10 @@ import { searchedMoviesOrSeries } from '@/controllers/search';
 import { moviesByCountry, setOfCountries } from '@/controllers/country';
 import { CacheService } from '@/utils/cache';
 import {
-    clearAllCache,
     clearCacheByPattern,
     getCacheStats,
-    clearSpecificCache
+    clearSpecificCache,
+    clearAllCache
 } from '@/controllers/cache';
 
 import {
@@ -61,7 +61,7 @@ const cache = CacheService.middleware();
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 // Movie routes with caching
-router.get('/movies', cache, latestMovies);
+router.get('/movies', latestMovies);
 
 /**
  * @swagger
@@ -82,7 +82,7 @@ router.get('/movies', cache, latestMovies);
  *               items:
  *                 $ref: '#/components/schemas/Movie'
  */
-router.get('/popular/movies', cache, popularMovies);
+router.get('/popular/movies', popularMovies);
 
 /**
  * @swagger
@@ -103,7 +103,7 @@ router.get('/popular/movies', cache, popularMovies);
  *               items:
  *                 $ref: '#/components/schemas/Movie'
  */
-router.get('/recent-release/movies', cache, recentReleaseMovies);
+router.get('/recent-release/movies', recentReleaseMovies);
 
 /**
  * @swagger
@@ -124,7 +124,7 @@ router.get('/recent-release/movies', cache, recentReleaseMovies);
  *               items:
  *                 $ref: '#/components/schemas/Movie'
  */
-router.get('/top-rated/movies', cache, topRatedMovies);
+router.get('/top-rated/movies', topRatedMovies);
 
 /**
  * @swagger
@@ -149,7 +149,7 @@ router.get('/top-rated/movies', cache, topRatedMovies);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/movies/:id', cache, movieDetails);
+router.get('/movies/:id', movieDetails);
 
 /**
  * @swagger
@@ -169,7 +169,7 @@ router.get('/movies/:id', cache, movieDetails);
  *                 $ref: '#/components/schemas/Genre'
  */
 // Genre, country, year routes with caching
-router.get('/genres', cache, setOfGenres);
+router.get('/genres', setOfGenres);
 
 /**
  * @swagger
@@ -197,7 +197,7 @@ router.get('/genres', cache, setOfGenres);
  *               items:
  *                 $ref: '#/components/schemas/Movie'
  */
-router.get('/genres/:genre', cache, moviesByGenre);
+router.get('/genres/:genre', moviesByGenre);
 
 /**
  * @swagger
@@ -216,7 +216,7 @@ router.get('/genres/:genre', cache, moviesByGenre);
  *               items:
  *                 $ref: '#/components/schemas/Country'
  */
-router.get('/countries', cache, setOfCountries);
+router.get('/countries', setOfCountries);
 
 /**
  * @swagger
@@ -244,7 +244,7 @@ router.get('/countries', cache, setOfCountries);
  *               items:
  *                 $ref: '#/components/schemas/Movie'
  */
-router.get('/countries/:country', cache, moviesByCountry);
+router.get('/countries/:country', moviesByCountry);
 
 /**
  * @swagger
@@ -263,7 +263,7 @@ router.get('/countries/:country', cache, moviesByCountry);
  *               items:
  *                 $ref: '#/components/schemas/Year'
  */
-router.get('/years', cache, setOfYears);
+router.get('/years', setOfYears);
 
 /**
  * @swagger
@@ -291,7 +291,7 @@ router.get('/years', cache, setOfYears);
  *               items:
  *                 $ref: '#/components/schemas/Movie'
  */
-router.get('/years/:year', cache, moviesByYear);
+router.get('/years/:year', moviesByYear);
 
 /**
  * @swagger
@@ -313,7 +313,7 @@ router.get('/years/:year', cache, moviesByYear);
  *                 $ref: '#/components/schemas/Series'
  */
 // Series routes with caching
-router.get('/series', cache, latestSeries);
+router.get('/series', latestSeries);
 
 /**
  * @swagger
@@ -334,7 +334,7 @@ router.get('/series', cache, latestSeries);
  *               items:
  *                 $ref: '#/components/schemas/Series'
  */
-router.get('/popular/series', cache, popularSeries);
+router.get('/popular/series', popularSeries);
 
 /**
  * @swagger
@@ -355,7 +355,7 @@ router.get('/popular/series', cache, popularSeries);
  *               items:
  *                 $ref: '#/components/schemas/Series'
  */
-router.get('/recent-release/series', cache, recentReleaseSeries);
+router.get('/recent-release/series', recentReleaseSeries);
 
 /**
  * @swagger
@@ -376,7 +376,7 @@ router.get('/recent-release/series', cache, recentReleaseSeries);
  *               items:
  *                 $ref: '#/components/schemas/Series'
  */
-router.get('/top-rated/series', cache, topRatedSeries);
+router.get('/top-rated/series', topRatedSeries);
 
 /**
  * @swagger
@@ -401,7 +401,7 @@ router.get('/top-rated/series', cache, topRatedSeries);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/series/:id', cache, seriesDetails);
+router.get('/series/:id', seriesDetails);
 
 /**
  * @swagger
@@ -467,7 +467,7 @@ router.get('/series/:id', cache, seriesDetails);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/episodes/:id', cache, streamSeries);
+router.get('/episodes/:id', streamSeries);
 
 /**
  * @swagger
@@ -497,7 +497,7 @@ router.get('/episodes/:id', cache, streamSeries);
  *                   - $ref: '#/components/schemas/Series'
  */
 // Search with caching
-router.get('/search/:title', cache, searchedMoviesOrSeries);
+router.get('/search/:title', searchedMoviesOrSeries);
 
 /**
  * @swagger
