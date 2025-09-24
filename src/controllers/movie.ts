@@ -190,6 +190,18 @@ export const movieDetails: TController = async (req, res) => {
         const url = `${process.env.LK21_URL}/${id}`;
         const axiosRequest = await ProxyManager.makeRequestWithProxy(url);
 
+        // find from database first
+        const movieFromDb = await MovieService.getMovieByExternalId(id);
+        if (movieFromDb) {
+            const successResponse: SuccessResponse<typeof movieFromDb> = {
+                success: true,
+                message: 'Movie details fetched successfully',
+                data: movieFromDb,
+            }
+            res.status(200).json(successResponse);
+        }
+
+
         const payload = await scrapeMovieDetails(req, axiosRequest);
 
         // Save movie details to database (async, don't wait)
