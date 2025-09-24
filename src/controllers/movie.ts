@@ -195,12 +195,12 @@ export const movieDetails: TController = async (req, res) => {
         if (movieFromDb) {
             const successResponse: SuccessResponse<typeof movieFromDb> = {
                 success: true,
-                message: 'Movie details fetched successfullys',
+                message: 'Movie details fetched successfully',
                 data: movieFromDb,
             }
             res.status(200).json(successResponse);
+            return; // Important: stop execution here to avoid sending multiple responses
         }
-
 
         const payload = await scrapeMovieDetails(req, axiosRequest);
 
