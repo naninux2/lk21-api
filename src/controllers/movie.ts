@@ -195,7 +195,7 @@ export const movieDetails: TController = async (req, res) => {
         if (movieFromDb) {
             const successResponse: SuccessResponse<typeof movieFromDb> = {
                 success: true,
-                message: 'Movie details fetched successfully',
+                message: 'Movie details fetched successfullys',
                 data: movieFromDb,
             }
             res.status(200).json(successResponse);
