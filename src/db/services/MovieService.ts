@@ -15,7 +15,18 @@ import { CategoryService } from './CategoryService';
 
 export class MovieService {
 
+    // Environment flag to disable database operations temporarily
+    private static get isDbEnabled(): boolean {
+        return process.env.ENABLE_DATABASE_OPERATIONS === 'true';
+    }
+
     static async createOrUpdateMovie(movieData: IMovieDetails | IMovies): Promise<number | null> {
+        // Database operations disabled temporarily
+        if (!this.isDbEnabled) {
+            console.log(`[DB_DISABLED] Skipping database save for movie: ${movieData.title}`);
+            return Math.floor(Math.random() * 1000); // Return mock ID
+        }
+
         try {
             const isDetails = 'synopsis' in movieData;
 
@@ -89,6 +100,38 @@ export class MovieService {
 
             return movie.id;
         } catch (error) {
+            // Handle specific database constraint violations
+            if (error && typeof error === 'object' && 'code' in error) {
+                const dbError = error as any;
+
+                // Handle duplicate key violations
+                if (dbError.code === '23505') {
+                    if (dbError.constraint === 'movies_title_idx') {
+                        console.warn(`Movie with title "${movieData.title}" already exists, skipping...`);
+                        // Try to find existing movie by title and year for potential update
+                        try {
+                            const existingMovies = await db
+                                .select({ id: movies.id })
+                                .from(movies)
+                                .where(eq(movies.title, movieData.title));
+
+                            if (existingMovies.length > 0) {
+                                console.log(`Found existing movie with same title, using existing ID: ${existingMovies[0].id}`);
+                                return existingMovies[0].id;
+                            }
+                        } catch (findError) {
+                            console.error('Error finding existing movie by title:', findError);
+                        }
+                        return null;
+                    }
+
+                    if (dbError.constraint === 'movies_external_id_idx') {
+                        console.warn(`Movie with external_id "${movieData._id}" already exists`);
+                        return null;
+                    }
+                }
+            }
+
             console.error('Error creating/updating movie:', error);
             return null;
         }
@@ -199,6 +242,12 @@ export class MovieService {
     }
 
     static async getMovieByExternalId(externalId: string): Promise<DbMovieWithRelations | null> {
+        // Database operations disabled temporarily
+        if (!this.isDbEnabled) {
+            console.log(`[DB_DISABLED] Skipping database lookup for external ID: ${externalId}`);
+            return null; // Always return null to force fresh scraping
+        }
+
         try {
             const result = await db
                 .select({
@@ -285,15 +334,33 @@ export class MovieService {
     }
 
     static async batchCreateMovies(moviesData: (IMovieDetails | IMovies)[]): Promise<number[]> {
+        // Database operations disabled temporarily
+        if (!this.isDbEnabled) {
+            console.log(`[DB_DISABLED] Skipping database batch save for ${moviesData.length} movies`);
+            return moviesData.map((_, index) => index + 1); // Return mock IDs
+        }
+
         const createdIds: number[] = [];
+        let successCount = 0;
+        let skippedCount = 0;
+        let errorCount = 0;
 
         for (const movieData of moviesData) {
-            const movieId = await this.createOrUpdateMovie(movieData);
-            if (movieId) {
-                createdIds.push(movieId);
+            try {
+                const movieId = await this.createOrUpdateMovie(movieData);
+                if (movieId) {
+                    createdIds.push(movieId);
+                    successCount++;
+                } else {
+                    skippedCount++;
+                }
+            } catch (error) {
+                errorCount++;
+                console.error(`Failed to process movie "${movieData.title}":`, error);
             }
         }
 
+        console.log(`Batch processing complete: ${successCount} created/updated, ${skippedCount} skipped, ${errorCount} errors`);
         return createdIds;
     }
 }

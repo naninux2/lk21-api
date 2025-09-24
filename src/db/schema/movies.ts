@@ -23,7 +23,8 @@ export const movies = pgTable('movies', {
 }, (table) => {
     return {
         externalIdIdx: uniqueIndex('movies_external_id_idx').on(table.externalId),
-        titleIdx: uniqueIndex('movies_title_idx').on(table.title),
+        // Removed title unique index - movies can have same title with different external_id
+        // titleIdx: uniqueIndex('movies_title_idx').on(table.title),
     };
 });
 
