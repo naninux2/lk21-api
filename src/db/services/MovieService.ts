@@ -15,7 +15,8 @@ import { CategoryService } from './CategoryService';
 
 export class MovieService {
 
-    // Environment flag to disable database operations temporarily
+
+    // Environment flag to disable database operations temporarilys
     private static get isDbEnabled(): boolean {
         return process.env.ENABLE_DATABASE_OPERATIONS === 'true';
     }
